@@ -1,0 +1,1036 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Mini-CRM v3</title>
+<link href="https://fonts.googleapis.com/css2?family=Heebo:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#0d0f18;--surface:#141720;--surface2:#1c2030;--surface3:#242840;
+  --border:#2a2f45;--accent:#6c63ff;--accent2:#ff6584;--success:#2ed573;
+  --warning:#ffa502;--danger:#ff4757;--text:#e8eaf6;--muted:#6b7499;
+  --radius:12px;--sidebar-w:265px;
+}
+.light{
+  --bg:#f0f2f8;--surface:#ffffff;--surface2:#f5f6fa;--surface3:#ebedf5;
+  --border:#dde1f0;--text:#1a1d2e;--muted:#8890b0;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{height:100%;font-family:'Heebo',sans-serif;background:var(--bg);color:var(--text);direction:rtl;transition:background .3s,color .3s}
+/* LOCK */
+#lockScreen{position:fixed;inset:0;background:var(--bg);display:flex;align-items:center;justify-content:center;z-index:9999;flex-direction:column;gap:12px}
+.lock-box{background:var(--surface);border:1px solid var(--border);border-radius:20px;padding:40px;text-align:center;width:340px;box-shadow:0 20px 60px rgba(0,0,0,.4)}
+.lock-icon{font-size:52px;margin-bottom:14px}
+.lock-box h2{font-size:20px;font-weight:800;margin-bottom:4px}
+.lock-box p{color:var(--muted);font-size:13px;margin-bottom:20px}
+.lock-box input{width:100%;background:var(--surface2);border:1px solid var(--border);border-radius:10px;padding:12px 16px;color:var(--text);font-family:'Heebo',sans-serif;font-size:16px;text-align:center;letter-spacing:4px;outline:none;transition:.2s}
+.lock-box input:focus{border-color:var(--accent)}
+.lock-btn{width:100%;margin-top:14px;background:var(--accent);border:none;border-radius:10px;padding:12px;color:#fff;font-family:'Heebo',sans-serif;font-size:15px;font-weight:700;cursor:pointer;transition:.2s}
+.lock-btn:hover{background:#7c74ff}
+.lock-err{color:var(--danger);font-size:12px;margin-top:8px;min-height:18px}
+.lock-hint{color:var(--muted);font-size:12px}
+/* LAYOUT */
+.app{display:flex;height:100vh;overflow:hidden}
+.sidebar{width:var(--sidebar-w);min-width:var(--sidebar-w);background:var(--surface);border-left:1px solid var(--border);display:flex;flex-direction:column;overflow:hidden;transition:background .3s}
+.main{flex:1;overflow:hidden;display:flex;flex-direction:column}
+/* SIDEBAR */
+.sb-logo{padding:18px 14px 12px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between}
+.sb-logo h1{font-size:18px;font-weight:900;background:linear-gradient(135deg,var(--accent),var(--accent2));-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
+.sb-logo p{font-size:10px;color:var(--muted)}
+.theme-toggle{background:none;border:1px solid var(--border);border-radius:8px;padding:5px 8px;color:var(--muted);cursor:pointer;font-size:14px;transition:.2s}
+.theme-toggle:hover{border-color:var(--accent);color:var(--accent)}
+.sb-search{padding:10px 12px;border-bottom:1px solid var(--border)}
+.sb-search input{width:100%;background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:8px 12px;color:var(--text);font-family:'Heebo',sans-serif;font-size:13px;outline:none;transition:.2s}
+.sb-search input:focus{border-color:var(--accent)}
+.sb-search input::placeholder{color:var(--muted)}
+.sb-add{margin:10px 12px;width:calc(100% - 24px);background:var(--accent);color:#fff;border:none;border-radius:9px;padding:9px;font-family:'Heebo',sans-serif;font-size:13px;font-weight:700;cursor:pointer;transition:.2s}
+.sb-add:hover{background:#7c74ff}
+.sb-nav{padding:4px 8px;border-bottom:1px solid var(--border)}
+.sb-nav-btn{width:100%;display:flex;align-items:center;gap:8px;padding:8px 10px;border-radius:8px;border:none;background:none;color:var(--muted);font-family:'Heebo',sans-serif;font-size:13px;font-weight:600;cursor:pointer;transition:.15s;text-align:right}
+.sb-nav-btn:hover{background:var(--surface2);color:var(--text)}
+.sb-nav-btn.active{background:rgba(108,99,255,.15);color:var(--accent)}
+.nb-icon{font-size:15px;min-width:20px}
+.nb-badge{margin-right:auto;background:var(--danger);color:#fff;font-size:10px;border-radius:10px;padding:1px 6px;font-weight:800}
+.sb-sort{padding:6px 10px;display:flex;gap:4px;border-bottom:1px solid var(--border)}
+.sort-btn{flex:1;background:none;border:1px solid var(--border);border-radius:6px;color:var(--muted);font-family:'Heebo',sans-serif;font-size:10px;padding:4px;cursor:pointer;transition:.2s}
+.sort-btn.active{border-color:var(--accent);color:var(--accent)}
+.clients-list{flex:1;overflow-y:auto;padding:6px 8px}
+.cl-group-label{font-size:10px;font-weight:700;color:var(--muted);padding:8px 8px 3px;text-transform:uppercase;letter-spacing:1px}
+.cl-item{padding:9px 11px;border-radius:9px;cursor:pointer;transition:.15s;margin-bottom:2px;border:1px solid transparent}
+.cl-item:hover{background:var(--surface2)}
+.cl-item.active{background:rgba(108,99,255,.15);border-color:rgba(108,99,255,.35)}
+.cl-name{font-size:13px;font-weight:600;display:flex;align-items:center;gap:5px}
+.cl-sub{font-size:11px;color:var(--muted);margin-top:1px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.cl-badge{background:var(--danger);color:#fff;font-size:9px;border-radius:7px;padding:1px 5px;font-weight:800}
+.cl-dot{width:8px;height:8px;border-radius:50%;min-width:8px}
+.sb-footer{padding:8px 10px;border-top:1px solid var(--border);display:flex;gap:5px;flex-wrap:wrap}
+.sb-footer button{flex:1;min-width:50px;background:var(--surface2);border:1px solid var(--border);color:var(--muted);border-radius:7px;padding:6px 3px;font-family:'Heebo',sans-serif;font-size:10px;cursor:pointer;transition:.2s}
+.sb-footer button:hover{border-color:var(--accent);color:var(--accent)}
+/* PAGES */
+.page{flex:1;overflow-y:auto;display:none;flex-direction:column}
+.page.active{display:flex}
+/* HOME */
+.home-header{padding:22px 26px 0;background:linear-gradient(180deg,rgba(108,99,255,.08),transparent)}
+.home-header h2{font-size:22px;font-weight:900}
+.home-header p{color:var(--muted);font-size:13px;margin-top:3px}
+.stats-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;padding:16px 26px}
+.stat-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:14px 16px;cursor:pointer;transition:.2s}
+.stat-card:hover{border-color:var(--accent);transform:translateY(-2px)}
+.sc-icon{font-size:22px;margin-bottom:6px}
+.sc-val{font-size:26px;font-weight:900}
+.sc-label{font-size:11px;color:var(--muted);margin-top:1px}
+.stat-card.danger .sc-val{color:var(--danger)}
+.stat-card.success .sc-val{color:var(--success)}
+.stat-card.warning .sc-val{color:var(--warning)}
+.home-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px;padding:0 26px 26px}
+.home-section{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);overflow:hidden}
+.hs-head{padding:12px 14px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between}
+.hs-head h3{font-size:13px;font-weight:700}
+.hs-body{padding:10px}
+.mini-task{display:flex;align-items:center;gap:9px;padding:8px 9px;border-radius:8px;margin-bottom:3px;cursor:pointer;transition:.15s;border:1px solid transparent}
+.mini-task:hover{background:var(--surface2);border-color:var(--border)}
+.mini-task.overdue{background:rgba(255,71,87,.06);border-color:rgba(255,71,87,.2)}
+.mt-check{width:17px;height:17px;min-width:17px;border-radius:5px;border:2px solid var(--border);display:flex;align-items:center;justify-content:center;transition:.2s}
+.mt-check.done{background:var(--success);border-color:var(--success)}
+.mt-check.done::after{content:'✓';color:#000;font-size:10px;font-weight:900}
+.mt-info{flex:1;min-width:0}
+.mt-title{font-size:12px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.mt-client{font-size:11px;color:var(--muted)}
+.mt-date{font-size:11px;font-weight:700;white-space:nowrap}
+.mt-date.late{color:var(--danger)}
+.mt-date.soon{color:var(--warning)}
+.mt-date.ok{color:var(--muted)}
+.recent-client{display:flex;align-items:center;gap:9px;padding:8px 9px;border-radius:8px;cursor:pointer;transition:.15s}
+.recent-client:hover{background:var(--surface2)}
+.rc-avatar{width:34px;height:34px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:800;color:#fff;min-width:34px}
+.rc-name{font-size:13px;font-weight:600}
+.rc-sub{font-size:11px;color:var(--muted)}
+.act-item{display:flex;align-items:flex-start;gap:9px;padding:7px 0;border-bottom:1px solid rgba(42,47,69,.4);font-size:12px}
+.act-item:last-child{border-bottom:none}
+.act-dot{width:7px;height:7px;border-radius:50%;margin-top:4px;min-width:7px}
+.act-dot.client{background:var(--accent)}
+.act-dot.task{background:var(--success)}
+.act-dot.summary{background:var(--warning)}
+.act-text{flex:1;color:var(--muted)}
+.act-text strong{color:var(--text)}
+.act-time{font-size:10px;color:var(--muted);white-space:nowrap}
+/* CLIENT VIEW */
+.cv-header{padding:16px 22px;background:var(--surface);border-bottom:1px solid var(--border);display:flex;align-items:center;gap:14px}
+.cv-avatar{width:46px;height:46px;border-radius:13px;display:flex;align-items:center;justify-content:center;font-size:19px;font-weight:900;color:#fff;min-width:46px}
+.cv-info{flex:1}
+.cv-info h2{font-size:19px;font-weight:800}
+.cv-info .cv-sub{font-size:12px;color:var(--muted);margin-top:2px}
+.cv-meta{display:flex;gap:10px;margin-top:5px;flex-wrap:wrap}
+.cv-meta a,.cv-meta span{font-size:12px;color:var(--muted);display:flex;align-items:center;gap:3px;text-decoration:none;transition:.2s}
+.cv-meta a:hover{color:var(--accent)}
+.cv-status{display:inline-flex;align-items:center;gap:5px;padding:3px 10px;border-radius:20px;font-size:11px;font-weight:700;margin-top:4px}
+.cv-actions{display:flex;gap:6px;flex-wrap:wrap}
+/* PIPELINE */
+.pipeline-wrap{display:flex;gap:12px;overflow-x:auto;padding:16px 22px;min-height:200px}
+.pipeline-col{min-width:200px;background:var(--surface2);border-radius:var(--radius);border:1px solid var(--border);overflow:hidden}
+.pipeline-col-head{padding:10px 14px;font-size:12px;font-weight:700;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between}
+.pipeline-col-body{padding:8px}
+.pipeline-card{background:var(--surface);border:1px solid var(--border);border-radius:9px;padding:10px 12px;margin-bottom:7px;cursor:pointer;transition:.2s;font-size:13px}
+.pipeline-card:hover{border-color:var(--accent);transform:translateY(-1px)}
+.pipeline-card .pc-name{font-weight:600}
+.pipeline-card .pc-val{font-size:12px;color:var(--success);margin-top:3px;font-weight:600}
+.pipeline-card .pc-date{font-size:11px;color:var(--muted)}
+/* KANBAN */
+.kanban-wrap{display:flex;gap:14px;overflow-x:auto;padding:16px 22px;min-height:300px;align-items:flex-start}
+.kanban-col{min-width:220px;max-width:260px;background:var(--surface2);border-radius:var(--radius);border:1px solid var(--border);overflow:hidden;flex-shrink:0}
+.kanban-col-head{padding:10px 14px;font-size:12px;font-weight:700;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:8px}
+.kanban-col-body{padding:8px;min-height:80px}
+.kanban-card{background:var(--surface);border:1px solid var(--border);border-radius:9px;padding:10px 12px;margin-bottom:7px;cursor:pointer;transition:.2s;font-size:12px}
+.kanban-card:hover{border-color:var(--accent)}
+.kanban-card .kc-title{font-weight:600;font-size:13px}
+.kanban-card .kc-client{color:var(--muted);margin-top:3px}
+.kanban-card .kc-due{margin-top:4px;font-weight:600}
+/* CALENDAR */
+.cal-wrap{padding:16px 22px}
+.cal-nav{display:flex;align-items:center;gap:14px;margin-bottom:16px}
+.cal-nav h3{font-size:16px;font-weight:700}
+.cal-nav button{background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:6px 12px;color:var(--text);cursor:pointer;font-family:'Heebo',sans-serif;font-size:13px;transition:.2s}
+.cal-nav button:hover{border-color:var(--accent);color:var(--accent)}
+.cal-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:3px}
+.cal-day-name{text-align:center;font-size:11px;font-weight:700;color:var(--muted);padding:6px 0;text-transform:uppercase}
+.cal-cell{background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:6px;min-height:80px;cursor:pointer;transition:.2s;font-size:12px}
+.cal-cell:hover{border-color:var(--accent)}
+.cal-cell.today{border-color:var(--accent);background:rgba(108,99,255,.08)}
+.cal-cell.other-month{opacity:.35}
+.cal-cell .day-num{font-weight:700;margin-bottom:4px;font-size:13px}
+.cal-event{background:rgba(108,99,255,.2);color:var(--accent);border-radius:4px;padding:2px 5px;margin-bottom:2px;font-size:10px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.cal-event.overdue{background:rgba(255,71,87,.2);color:var(--danger)}
+.cal-event.today-ev{background:rgba(255,165,2,.2);color:var(--warning)}
+/* TABS */
+.tabs-bar{display:flex;background:var(--surface);border-bottom:1px solid var(--border);padding:0 16px;overflow-x:auto;gap:0;flex-shrink:0}
+.tab-btn{padding:11px 14px;font-family:'Heebo',sans-serif;font-size:12px;font-weight:600;color:var(--muted);background:none;border:none;border-bottom:2px solid transparent;cursor:pointer;transition:.2s;white-space:nowrap}
+.tab-btn:hover{color:var(--text)}
+.tab-btn.active{color:var(--accent);border-bottom-color:var(--accent)}
+.tab-content{flex:1;overflow-y:auto;padding:18px 22px}
+/* BUTTONS */
+.btn{padding:7px 13px;border-radius:8px;border:none;font-family:'Heebo',sans-serif;font-size:12px;font-weight:600;cursor:pointer;transition:.2s;display:inline-flex;align-items:center;gap:4px}
+.btn-primary{background:var(--accent);color:#fff}.btn-primary:hover{background:#7c74ff}
+.btn-ghost{background:var(--surface2);color:var(--text);border:1px solid var(--border)}.btn-ghost:hover{border-color:var(--accent);color:var(--accent)}
+.btn-danger{background:rgba(255,71,87,.15);color:var(--danger);border:1px solid rgba(255,71,87,.3)}.btn-danger:hover{background:var(--danger);color:#fff}
+.btn-success{background:rgba(46,213,115,.15);color:var(--success);border:1px solid rgba(46,213,115,.3)}.btn-success:hover{background:var(--success);color:#000}
+.btn-warning{background:rgba(255,165,2,.15);color:var(--warning);border:1px solid rgba(255,165,2,.3)}.btn-warning:hover{background:var(--warning);color:#000}
+.btn-sm{padding:4px 9px;font-size:11px}
+.btn-xs{padding:3px 7px;font-size:10px}
+/* CARDS */
+.card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:16px;margin-bottom:12px}
+.card-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:14px}
+.card-head h3{font-size:14px;font-weight:700}
+table{width:100%;border-collapse:collapse}
+th{text-align:right;padding:9px 11px;font-size:11px;color:var(--muted);font-weight:700;background:var(--surface2);border-bottom:1px solid var(--border);text-transform:uppercase;letter-spacing:.5px}
+td{padding:10px 11px;font-size:13px;border-bottom:1px solid rgba(42,47,69,.5);vertical-align:middle}
+tr:last-child td{border-bottom:none}
+tr:hover td{background:rgba(108,99,255,.03)}
+/* TAGS */
+.tags-wrap{display:flex;flex-wrap:wrap;gap:6px;padding:4px 0}
+.tag{display:inline-flex;align-items:center;gap:4px;background:rgba(108,99,255,.15);border:1px solid rgba(108,99,255,.3);color:var(--accent);border-radius:20px;padding:4px 11px;font-size:12px;font-weight:600}
+.tag .x{cursor:pointer;color:var(--muted);font-size:14px;line-height:1;transition:.2s}.tag .x:hover{color:var(--danger)}
+/* FILES */
+.drop-zone{border:2px dashed var(--border);border-radius:var(--radius);padding:24px;text-align:center;color:var(--muted);cursor:pointer;transition:.2s;margin-bottom:12px}
+.drop-zone:hover{border-color:var(--accent);color:var(--accent)}
+.file-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:8px}
+.file-card{background:var(--surface2);border:1px solid var(--border);border-radius:9px;padding:12px;transition:.2s;display:flex;align-items:center;gap:9px}
+.file-card:hover{border-color:var(--accent)}
+.fi{font-size:26px;min-width:30px;text-align:center}
+.fn{flex:1;min-width:0}
+.fn-name{font-size:12px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.fn-date{font-size:10px;color:var(--muted);margin-top:2px}
+/* SUMMARIES */
+.sum-item{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:14px;margin-bottom:9px;transition:.2s}
+.sum-item:hover{border-color:rgba(108,99,255,.3)}
+.sh{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:8px}
+.st{font-size:13px;font-weight:700}
+.sd{font-size:11px;color:var(--muted);margin-top:2px}
+.sb-body{font-size:13px;color:var(--muted);line-height:1.7;white-space:pre-wrap}
+/* TASKS */
+.task-filters{display:flex;gap:5px;margin-bottom:12px;flex-wrap:wrap}
+.tf-btn{padding:5px 12px;border-radius:20px;border:1px solid var(--border);background:none;color:var(--muted);font-family:'Heebo',sans-serif;font-size:11px;font-weight:600;cursor:pointer;transition:.2s}
+.tf-btn.active{background:var(--accent);border-color:var(--accent);color:#fff}
+.task-item{display:flex;align-items:flex-start;gap:11px;padding:12px 14px;background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);margin-bottom:7px;transition:.2s}
+.task-item.overdue{border-color:rgba(255,71,87,.4);background:rgba(255,71,87,.04)}
+.task-item.done{opacity:.4}
+.task-check{width:19px;height:19px;min-width:19px;border-radius:6px;border:2px solid var(--border);cursor:pointer;display:flex;align-items:center;justify-content:center;transition:.2s;margin-top:1px}
+.task-check.checked{background:var(--success);border-color:var(--success)}
+.task-check.checked::after{content:'✓';color:#000;font-size:11px;font-weight:900}
+.task-body{flex:1;min-width:0}
+.t-title{font-size:13px;font-weight:600}
+.task-item.done .t-title{text-decoration:line-through}
+.t-desc{font-size:12px;color:var(--muted);margin-top:2px}
+.t-due{font-size:11px;margin-top:4px;font-weight:600}
+.t-due.late{color:var(--danger)}.t-due.soon{color:var(--warning)}.t-due.ok{color:var(--muted)}
+.t-pri{display:inline-block;font-size:10px;font-weight:700;padding:2px 6px;border-radius:7px;margin-left:5px}
+.t-pri.high{background:rgba(255,71,87,.2);color:var(--danger)}
+.t-pri.mid{background:rgba(255,165,2,.2);color:var(--warning)}
+.t-pri.low{background:rgba(46,213,115,.15);color:var(--success)}
+.task-acts{display:flex;gap:3px;align-items:flex-start}
+/* TIME TRACKER */
+.timer-display{font-size:36px;font-weight:900;font-family:monospace;text-align:center;padding:20px;color:var(--accent)}
+.timer-client{text-align:center;font-size:14px;color:var(--muted);margin-bottom:16px}
+.time-log-item{display:flex;align-items:center;gap:10px;padding:10px 12px;background:var(--surface2);border-radius:9px;margin-bottom:6px;font-size:13px}
+.time-log-item .tl-dur{font-weight:700;color:var(--accent);font-family:monospace;min-width:70px}
+.time-log-item .tl-client{flex:1}
+.time-log-item .tl-date{font-size:11px;color:var(--muted)}
+/* QUOTES */
+.quote-item{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:14px;margin-bottom:9px}
+.qi-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:8px}
+.qi-title{font-size:14px;font-weight:700}
+.qi-amount{font-size:16px;font-weight:800;color:var(--success)}
+.qi-status{display:inline-block;padding:3px 10px;border-radius:20px;font-size:11px;font-weight:700}
+.qi-status.pending{background:rgba(255,165,2,.2);color:var(--warning)}
+.qi-status.approved{background:rgba(46,213,115,.2);color:var(--success)}
+.qi-status.rejected{background:rgba(255,71,87,.2);color:var(--danger)}
+/* MODAL */
+.overlay{position:fixed;inset:0;background:rgba(0,0,0,.75);backdrop-filter:blur(5px);display:flex;align-items:center;justify-content:center;z-index:500;animation:fi .15s ease}
+.modal{background:var(--surface);border:1px solid var(--border);border-radius:18px;padding:24px;width:100%;max-width:500px;max-height:90vh;overflow-y:auto;animation:su .2s ease}
+.modal h2{font-size:16px;font-weight:800;margin-bottom:16px}
+.form-group{margin-bottom:12px}
+.form-group label{display:block;font-size:11px;font-weight:700;color:var(--muted);margin-bottom:4px;text-transform:uppercase;letter-spacing:.5px}
+.form-group input,.form-group textarea,.form-group select{width:100%;background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:9px 12px;color:var(--text);font-family:'Heebo',sans-serif;font-size:13px;outline:none;transition:.2s;direction:rtl}
+.form-group input:focus,.form-group textarea:focus,.form-group select:focus{border-color:var(--accent)}
+.form-group textarea{resize:vertical;min-height:80px}
+.pw-wrap{position:relative}.pw-wrap input{padding-left:36px}
+.pw-eye{position:absolute;left:9px;top:50%;transform:translateY(-50%);background:none;border:none;color:var(--muted);cursor:pointer;font-size:14px;padding:0}
+.modal-foot{display:flex;gap:7px;justify-content:flex-start;margin-top:16px}
+.form-row{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.form-row3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px}
+@keyframes fi{from{opacity:0}to{opacity:1}}
+@keyframes su{from{transform:translateY(14px);opacity:0}to{transform:translateY(0);opacity:1}}
+/* MISC */
+.empty{text-align:center;padding:32px;color:var(--muted);font-size:13px}
+.empty .ei{font-size:36px;margin-bottom:9px}
+.divider{height:1px;background:var(--border);margin:12px 0}
+::-webkit-scrollbar{width:5px;height:5px}
+::-webkit-scrollbar-track{background:transparent}
+::-webkit-scrollbar-thumb{background:var(--border);border-radius:3px}
+.hidden{display:none!important}
+input[type=text],input[type=email],input[type=password],input[type=date],input[type=number],textarea,select{direction:rtl;text-align:right}
+#fileInput,#importFile{display:none}
+.kbd{display:inline-block;background:var(--surface2);border:1px solid var(--border);border-radius:5px;padding:2px 6px;font-size:11px;font-family:monospace}
+.section-title{font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:1px;margin-bottom:10px}
+/* SEARCH RESULTS */
+.search-result{padding:9px 12px;border-radius:9px;cursor:pointer;transition:.15s;border:1px solid transparent;margin-bottom:4px}
+.search-result:hover{background:var(--surface2);border-color:var(--border)}
+.sr-type{font-size:10px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.5px}
+.sr-title{font-size:13px;font-weight:600;margin-top:2px}
+.sr-sub{font-size:12px;color:var(--muted);margin-top:1px}
+mark{background:rgba(108,99,255,.3);color:var(--text);border-radius:3px;padding:0 2px}
+/* WHATSAPP / PHONE LINKS */
+.contact-btn{display:inline-flex;align-items:center;gap:5px;padding:5px 10px;border-radius:8px;font-size:12px;font-weight:600;cursor:pointer;text-decoration:none;transition:.2s;border:none;font-family:'Heebo',sans-serif}
+.wa-btn{background:rgba(37,211,102,.15);color:#25d366;border:1px solid rgba(37,211,102,.3)}.wa-btn:hover{background:#25d366;color:#fff}
+.call-btn{background:rgba(46,213,115,.15);color:var(--success);border:1px solid rgba(46,213,115,.3)}.call-btn:hover{background:var(--success);color:#000}
+.email-btn{background:rgba(108,99,255,.15);color:var(--accent);border:1px solid rgba(108,99,255,.3)}.email-btn:hover{background:var(--accent);color:#fff}
+/* REMINDERS */
+.reminder-bar{position:fixed;top:0;left:0;right:0;background:var(--warning);color:#000;padding:10px 20px;display:flex;align-items:center;gap:12px;z-index:800;font-weight:600;font-size:13px;animation:su .3s ease}
+.reminder-bar button{background:rgba(0,0,0,.2);border:none;border-radius:6px;padding:4px 10px;cursor:pointer;font-weight:700;font-size:12px}
+/* CUSTOM FIELDS */
+.cf-row{display:flex;align-items:center;gap:8px;padding:8px 0;border-bottom:1px solid rgba(42,47,69,.4)}
+.cf-row:last-child{border-bottom:none}
+.cf-label{font-size:12px;font-weight:600;color:var(--muted);min-width:120px}
+.cf-value{font-size:13px;flex:1}
+.cf-edit{background:none;border:none;color:var(--muted);cursor:pointer;font-size:13px;transition:.2s}.cf-edit:hover{color:var(--accent)}
+/* POMODORO */
+.pomo-display{font-size:52px;font-weight:900;font-family:monospace;text-align:center;color:var(--accent);padding:20px 0}
+.pomo-status{text-align:center;font-size:13px;color:var(--muted);margin-bottom:16px}
+.pomo-btns{display:flex;gap:8px;justify-content:center;margin-bottom:16px}
+.pomo-progress{height:4px;background:var(--surface2);border-radius:2px;overflow:hidden}
+.pomo-progress-fill{height:100%;background:var(--accent);transition:width .5s linear;border-radius:2px}
+</style>
+</head>
+<body>
+
+<!-- LOCK -->
+<div id="lockScreen">
+  <div class="lock-box">
+    <div class="lock-icon">🔐</div>
+    <h2>Mini-CRM v3</h2>
+    <p>הזן סיסמה לכניסה</p>
+    <input type="password" id="lockInput" placeholder="סיסמה" onkeydown="if(event.key==='Enter')unlock()">
+    <button class="lock-btn" onclick="unlock()">כניסה</button>
+    <div class="lock-err" id="lockErr"></div>
+  </div>
+  <div class="lock-hint">ברירת מחדל: <strong>1234</strong></div>
+</div>
+
+<!-- APP -->
+<div class="app hidden" id="app">
+  <div class="sidebar">
+    <div class="sb-logo">
+      <div><h1>⚡ Mini-CRM</h1><p id="sbDate"></p></div>
+      <button class="theme-toggle" onclick="toggleTheme()" id="themeBtn">🌙</button>
+    </div>
+    <div class="sb-search">
+      <input type="text" id="searchInput" placeholder="🔍  חיפוש גלובלי..." oninput="globalSearch(this.value)">
+    </div>
+    <button class="sb-add" onclick="openClientModal()">+ לקוח חדש</button>
+    <div class="sb-nav">
+      <button class="sb-nav-btn active" id="navHome" onclick="showPage('home',this)"><span class="nb-icon">🏠</span>לוח בקרה</button>
+      <button class="sb-nav-btn" id="navAllTasks" onclick="showPage('allTasks',this)"><span class="nb-icon">✅</span>כל המשימות<span class="nb-badge hidden" id="overdueCount">0</span></button>
+      <button class="sb-nav-btn" id="navPipeline" onclick="showPage('pipeline',this)"><span class="nb-icon">📊</span>פיפליין מכירות</button>
+      <button class="sb-nav-btn" id="navKanban" onclick="showPage('kanban',this)"><span class="nb-icon">🗂️</span>לוח קנבן</button>
+      <button class="sb-nav-btn" id="navCalendar" onclick="showPage('calendar',this)"><span class="nb-icon">📅</span>לוח שנה</button>
+      <button class="sb-nav-btn" id="navTimer" onclick="showPage('timer',this)"><span class="nb-icon">⏱️</span>מעקב זמן</button>
+      <button class="sb-nav-btn" id="navSearch" onclick="showPage('search',this)"><span class="nb-icon">🔍</span>חיפוש מתקדם</button>
+    </div>
+    <div class="sb-sort">
+      <button class="sort-btn active" id="sortName" onclick="setSortBy('name',this)">א-ת</button>
+      <button class="sort-btn" id="sortRecent" onclick="setSortBy('recent',this)">אחרונים</button>
+      <button class="sort-btn" id="sortTasks" onclick="setSortBy('tasks',this)">משימות</button>
+    </div>
+    <div class="clients-list" id="clientsList"></div>
+    <div class="sb-footer">
+      <button onclick="exportBackup()">📦 גיבוי</button>
+      <button onclick="document.getElementById('importFile').click()">📥 ייבוא</button>
+      <button onclick="exportExcel()">📊 Excel</button>
+      <button onclick="openSettings()">⚙️</button>
+      <button onclick="lockApp()">🔒</button>
+    </div>
+  </div>
+
+  <div class="main">
+    <!-- HOME -->
+    <div class="page active" id="pageHome">
+      <div class="home-header"><h2 id="homeGreeting"></h2><p id="homeSub"></p></div>
+      <div class="stats-grid" id="statsGrid"></div>
+      <div class="home-grid" id="homeGrid"></div>
+    </div>
+    <!-- ALL TASKS -->
+    <div class="page" id="pageAllTasks">
+      <div style="padding:20px 26px 0"><h2 style="font-size:20px;font-weight:900">✅ כל המשימות</h2></div>
+      <div style="padding:14px 26px;flex:1;overflow-y:auto" id="allTasksContent"></div>
+    </div>
+    <!-- PIPELINE -->
+    <div class="page" id="pagePipeline">
+      <div style="padding:20px 26px 0;display:flex;align-items:center;justify-content:space-between;flex-shrink:0">
+        <h2 style="font-size:20px;font-weight:900">📊 פיפליין מכירות</h2>
+        <button class="btn btn-primary btn-sm" onclick="openQuoteModal()">+ הצעת מחיר</button>
+      </div>
+      <div id="pipelineContent" style="flex:1;overflow:auto"></div>
+    </div>
+    <!-- KANBAN -->
+    <div class="page" id="pageKanban">
+      <div style="padding:20px 26px 0;flex-shrink:0"><h2 style="font-size:20px;font-weight:900">🗂️ לוח קנבן</h2></div>
+      <div id="kanbanContent" style="flex:1;overflow:auto"></div>
+    </div>
+    <!-- CALENDAR -->
+    <div class="page" id="pageCalendar">
+      <div id="calendarContent" style="flex:1;overflow-y:auto"></div>
+    </div>
+    <!-- TIMER -->
+    <div class="page" id="pageTimer">
+      <div style="padding:20px 26px 0;flex-shrink:0"><h2 style="font-size:20px;font-weight:900">⏱️ מעקב זמן</h2></div>
+      <div id="timerContent" style="flex:1;overflow-y:auto;padding:0 26px 26px"></div>
+    </div>
+    <!-- SEARCH -->
+    <div class="page" id="pageSearch">
+      <div style="padding:20px 26px 12px;flex-shrink:0">
+        <h2 style="font-size:20px;font-weight:900;margin-bottom:12px">🔍 חיפוש מתקדם</h2>
+        <input type="text" id="advSearchInput" placeholder="חפש בכל הנתונים..." style="width:100%;background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:11px 16px;color:var(--text);font-family:'Heebo',sans-serif;font-size:14px;outline:none" oninput="runAdvSearch(this.value)">
+      </div>
+      <div style="padding:0 26px 26px;flex:1;overflow-y:auto" id="searchResults"></div>
+    </div>
+    <!-- CLIENT VIEW -->
+    <div class="page" id="pageClient">
+      <div class="cv-header" id="cvHeader"></div>
+      <div class="tabs-bar" id="tabsBar">
+        <button class="tab-btn active" onclick="switchTab('creds',this)">🔑 גישה</button>
+        <button class="tab-btn" onclick="switchTab('keywords',this)">🏷️ תגיות</button>
+        <button class="tab-btn" onclick="switchTab('files',this)">📁 קבצים</button>
+        <button class="tab-btn" onclick="switchTab('summaries',this)">📝 סיכומים</button>
+        <button class="tab-btn" onclick="switchTab('tasks',this)">✅ משימות</button>
+        <button class="tab-btn" onclick="switchTab('quotes',this)">💰 הצעות</button>
+        <button class="tab-btn" onclick="switchTab('custom',this)">📋 שדות</button>
+        <button class="tab-btn" onclick="switchTab('history',this)">🕐 היסטוריה</button>
+      </div>
+      <div class="tab-content" id="tabContent"></div>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL -->
+<div class="overlay hidden" id="overlay" onclick="closeModalOutside(event)">
+  <div class="modal" id="modal">
+    <h2 id="modalTitle"></h2>
+    <div id="modalBody"></div>
+    <div class="modal-foot" id="modalFoot"></div>
+  </div>
+</div>
+
+<input type="file" id="fileInput" multiple onchange="handleFileUpload(this)">
+<input type="file" id="importFile" accept=".json" onchange="importBackup(this)">
+
+<script>
+// ══ STORAGE ══
+const DB='minicrm_v3',PK='minicrm_pass',TK='minicrm_theme';
+function loadDB(){try{return JSON.parse(localStorage.getItem(DB))||newDB()}catch{return newDB()}}
+function newDB(){return{clients:[],credentials:[],keywords:[],files:[],summaries:[],tasks:[],activity:[],quotes:[],timeLogs:[],customFields:{},reminders:[]}}
+function save(){localStorage.setItem(DB,JSON.stringify(db))}
+function uid(){return Date.now().toString(36)+Math.random().toString(36).slice(2,5)}
+function nowStr(){return new Date().toLocaleString('he-IL')}
+function todayStr(){return new Date().toISOString().slice(0,10)}
+function getPass(){return localStorage.getItem(PK)||'1234'}
+function setPass(p){localStorage.setItem(PK,p)}
+const EK='mcrm3xK9#$';
+function enc(s){if(!s)return'';let r='';for(let i=0;i<s.length;i++)r+=String.fromCharCode(s.charCodeAt(i)^EK.charCodeAt(i%EK.length));return btoa(unescape(encodeURIComponent(r)))}
+function dec(e){if(!e)return'';try{const s=decodeURIComponent(escape(atob(e)));let r='';for(let i=0;i<s.length;i++)r+=String.fromCharCode(s.charCodeAt(i)^EK.charCodeAt(i%EK.length));return r}catch{return''}}
+
+let db=loadDB(),currentClientId=null,currentTab='creds',taskFilter='all',sortByVal='name';
+let timerInterval=null,timerSeconds=0,timerClientId=null,timerRunning=false;
+let pomodoroInterval=null,pomodoroSeconds=25*60,pomodoroRunning=false,pomodoroMode='work';
+let calYear=new Date().getFullYear(),calMonth=new Date().getMonth();
+let autoLockTimeout=null;
+
+// ══ LOCK ══
+function unlock(){
+  const p=document.getElementById('lockInput').value;
+  if(p===getPass()){
+    document.getElementById('lockScreen').classList.add('hidden');
+    document.getElementById('app').classList.remove('hidden');
+    initApp();resetAutoLock();
+  }else{document.getElementById('lockErr').textContent='סיסמה שגויה';document.getElementById('lockInput').value=''}
+}
+function lockApp(){
+  document.getElementById('app').classList.add('hidden');
+  document.getElementById('lockScreen').classList.remove('hidden');
+  document.getElementById('lockInput').value='';
+  document.getElementById('lockErr').textContent='';
+}
+function resetAutoLock(){
+  clearTimeout(autoLockTimeout);
+  const mins=parseInt(localStorage.getItem('autolock')||'0');
+  if(mins>0)autoLockTimeout=setTimeout(()=>{lockApp();showToast('נעלת אוטומטית')},mins*60000);
+}
+document.addEventListener('mousemove',resetAutoLock);
+document.addEventListener('keydown',resetAutoLock);
+
+// ══ THEME ══
+function toggleTheme(){
+  const isLight=document.body.classList.toggle('light');
+  localStorage.setItem(TK,isLight?'light':'dark');
+  document.getElementById('themeBtn').textContent=isLight?'🌙':'☀️';
+}
+if(localStorage.getItem(TK)==='light'){document.body.classList.add('light');document.addEventListener('DOMContentLoaded',()=>{const b=document.getElementById('themeBtn');if(b)b.textContent='☀️'})}
+
+// ══ INIT ══
+function initApp(){
+  const d=new Date();
+  const days=['ראשון','שני','שלישי','רביעי','חמישי','שישי','שבת'];
+  document.getElementById('sbDate').textContent=`יום ${days[d.getDay()]}, ${d.toLocaleDateString('he-IL')}`;
+  const h=d.getHours();
+  document.getElementById('homeGreeting').textContent=h<12?'בוקר טוב ☀️':h<17?'צהריים טובים 🌤️':h<21?'ערב טוב 🌆':'לילה טוב 🌙';
+  document.getElementById('homeSub').textContent=`${d.toLocaleDateString('he-IL')} · Mini-CRM v3`;
+  renderClients();renderHome();updateOverdueBadge();checkReminders();
+  if(localStorage.getItem(TK)==='light')document.getElementById('themeBtn').textContent='☀️';
+}
+
+// ══ PAGES ══
+function showPage(name,btn){
+  document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
+  document.querySelectorAll('.sb-nav-btn').forEach(b=>b.classList.remove('active'));
+  if(btn)btn.classList.add('active');
+  const pageMap={home:'pageHome',allTasks:'pageAllTasks',pipeline:'pagePipeline',kanban:'pageKanban',calendar:'pageCalendar',timer:'pageTimer',search:'pageSearch',client:'pageClient'};
+  const pg=document.getElementById(pageMap[name]||'pageHome');
+  if(pg)pg.classList.add('active');
+  if(name==='home')renderHome();
+  else if(name==='allTasks')renderAllTasks();
+  else if(name==='pipeline')renderPipeline();
+  else if(name==='kanban')renderKanban();
+  else if(name==='calendar')renderCalendar();
+  else if(name==='timer')renderTimerPage();
+  else if(name==='search'){setTimeout(()=>document.getElementById('advSearchInput')?.focus(),80)}
+}
+
+// ══ HOME ══
+function renderHome(){
+  const td=todayStr();
+  const tasks=db.tasks,overdue=tasks.filter(t=>!t.done&&t.dueDate&&t.dueDate<td),todayT=tasks.filter(t=>!t.done&&t.dueDate===td),open=tasks.filter(t=>!t.done);
+  const totalQuoteVal=db.quotes.filter(q=>q.status==='approved').reduce((s,q)=>s+(parseFloat(q.amount)||0),0);
+  document.getElementById('statsGrid').innerHTML=`
+    <div class="stat-card" onclick="showPage('home',document.getElementById('navHome'))"><div class="sc-icon">👥</div><div class="sc-val">${db.clients.length}</div><div class="sc-label">לקוחות</div></div>
+    <div class="stat-card ${overdue.length?'danger':''}" onclick="showPage('allTasks',document.getElementById('navAllTasks'))"><div class="sc-icon">⚠️</div><div class="sc-val">${overdue.length}</div><div class="sc-label">באיחור</div></div>
+    <div class="stat-card ${todayT.length?'warning':''}" onclick="showPage('allTasks',document.getElementById('navAllTasks'))"><div class="sc-icon">📅</div><div class="sc-val">${todayT.length}</div><div class="sc-label">להיום</div></div>
+    <div class="stat-card success"><div class="sc-icon">💰</div><div class="sc-val">₪${totalQuoteVal.toLocaleString()}</div><div class="sc-label">הכנסות מאושרות</div></div>`;
+  const upcoming=[...overdue,...tasks.filter(t=>!t.done&&t.dueDate&&t.dueDate>=td)].sort((a,b)=>(a.dueDate||'z').localeCompare(b.dueDate||'z')).slice(0,8);
+  const recent=[...db.clients].sort((a,b)=>(b.updatedAt||b.createdAt||'').localeCompare(a.updatedAt||a.createdAt||'')).slice(0,6);
+  document.getElementById('homeGrid').innerHTML=`
+    <div class="home-section" style="grid-column:1/-1">
+      <div class="hs-head"><h3>📅 משימות קרובות</h3><button class="btn btn-ghost btn-sm" onclick="showPage('allTasks',document.getElementById('navAllTasks'))">הכל</button></div>
+      <div class="hs-body">${upcoming.length?upcoming.map(t=>{const c=db.clients.find(x=>x.id===t.clientId);const ov=t.dueDate<td,isT=t.dueDate===td,diff=daysDiff(t.dueDate,td);const dl=ov?`⚠️ ${Math.abs(diff)} יום`:isT?'📅 היום':`📅 ${diff} יום`;return`<div class="mini-task ${ov?'overdue':''}" onclick="selectClient('${t.clientId}')"><div class="mt-check ${t.done?'done':''}" onclick="event.stopPropagation();quickToggle('${t.id}')"></div><div class="mt-info"><div class="mt-title">${esc(t.title)}</div><div class="mt-client">${esc(c?.name||'')}</div></div><div class="mt-date ${ov?'late':isT?'soon':'ok'}">${dl}</div></div>`;}).join(''):'<div class="empty"><div class="ei">🎉</div>אין משימות!</div>'}</div>
+    </div>
+    <div class="home-section">
+      <div class="hs-head"><h3>👥 לקוחות אחרונים</h3></div>
+      <div class="hs-body">${recent.map(c=>{const colors=['#6c63ff','#ff6584','#2ed573','#ffa502','#ff4757','#1e90ff'];const ci=db.clients.indexOf(c)%colors.length;return`<div class="recent-client" onclick="selectClient('${c.id}')"><div class="rc-avatar" style="background:${colors[ci]}">${esc(c.name.charAt(0))}</div><div><div class="rc-name">${esc(c.name)}</div><div class="rc-sub">${esc(c.company||c.email||'')}</div></div></div>`;}).join('')||'<div class="empty"><div class="ei">👥</div>אין לקוחות</div>'}</div>
+    </div>
+    <div class="home-section">
+      <div class="hs-head"><h3>🕐 פעילות אחרונה</h3></div>
+      <div class="hs-body">${db.activity.slice(-8).reverse().map(a=>`<div class="act-item"><div class="act-dot ${a.type||'client'}"></div><div class="act-text"><strong>${esc(a.clientName||'')}</strong> ${esc(a.action)}</div><div class="act-time">${a.time}</div></div>`).join('')||'<div class="empty"><div class="ei">🕐</div>אין פעילות</div>'}</div>
+    </div>`;
+}
+
+function daysDiff(d,t){return Math.round((new Date(d)-new Date(t))/(864e5))}
+function quickToggle(id){const t=db.tasks.find(x=>x.id===id);if(t){t.done=!t.done;save();renderHome();updateOverdueBadge()}}
+
+// ══ ALL TASKS ══
+function renderAllTasks(){
+  const td=todayStr();
+  const groups={overdue:[],today:[],week:[],future:[],nodueopen:[],done:[]};
+  db.tasks.forEach(t=>{
+    const c=db.clients.find(x=>x.id===t.clientId);t._cn=c?.name||'לא ידוע';
+    if(t.done){groups.done.push(t);return}
+    if(!t.dueDate){groups.nodueopen.push(t);return}
+    if(t.dueDate<td)groups.overdue.push(t);
+    else if(t.dueDate===td)groups.today.push(t);
+    else if(daysDiff(t.dueDate,td)<=7)groups.week.push(t);
+    else groups.future.push(t);
+  });
+  const secs=[{k:'overdue',l:'⚠️ באיחור',items:groups.overdue},{k:'today',l:'📅 היום',items:groups.today},{k:'week',l:'📆 השבוע',items:groups.week},{k:'future',l:'🔮 עתידי',items:groups.future},{k:'nodueopen',l:'📋 ללא תאריך',items:groups.nodueopen},{k:'done',l:'✅ הושלמו',items:groups.done.slice(-20).reverse()}];
+  document.getElementById('allTasksContent').innerHTML=secs.filter(s=>s.items.length).map(s=>`<div style="margin-bottom:18px"><div class="section-title">${s.l} (${s.items.length})</div>${s.items.map(t=>{const ov=!t.done&&t.dueDate&&t.dueDate<td;return`<div class="task-item ${ov?'overdue':''} ${t.done?'done':''}"><div class="task-check ${t.done?'checked':''}" onclick="quickToggle('${t.id}');renderAllTasks()"></div><div class="task-body"><div class="t-title">${t.priority?`<span class="t-pri ${t.priority}">${{high:'גבוהה',mid:'בינונית',low:'נמוכה'}[t.priority]}</span>`:''} ${esc(t.title)} <span style="font-size:11px;color:var(--muted)">— ${esc(t._cn)}</span></div>${t.description?`<div class="t-desc">${esc(t.description)}</div>`:''} ${t.dueDate?`<div class="t-due ${ov?'late':t.dueDate===td?'soon':'ok'}">${formatDate(t.dueDate)}</div>`:''}</div><div class="task-acts"><button class="btn btn-ghost btn-sm" onclick="selectClient('${t.clientId}')">פתח</button></div></div>`;}).join('')}</div>`).join('')||'<div class="empty"><div class="ei">🎉</div>אין משימות!</div>';
+}
+function updateOverdueBadge(){const n=db.tasks.filter(t=>!t.done&&t.dueDate&&t.dueDate<todayStr()).length;const b=document.getElementById('overdueCount');if(b){b.textContent=n;b.classList.toggle('hidden',n===0)}}
+
+// ══ PIPELINE ══
+const PIPELINE_STAGES=['ליד','הצגה','הצעת מחיר','משא ומתן','סגור - זכייה','סגור - הפסד'];
+const STAGE_COLORS={'ליד':'#6b7499','הצגה':'#6c63ff','הצעת מחיר':'#ffa502','משא ומתן':'#ff6584','סגור - זכייה':'#2ed573','סגור - הפסד':'#ff4757'};
+function renderPipeline(){
+  const content=document.getElementById('pipelineContent');
+  content.innerHTML=`<div class="pipeline-wrap">${PIPELINE_STAGES.map(stage=>{
+    const quotes=db.quotes.filter(q=>q.stage===stage);
+    const total=quotes.reduce((s,q)=>s+(parseFloat(q.amount)||0),0);
+    return`<div class="pipeline-col"><div class="pipeline-col-head" style="border-top:3px solid ${STAGE_COLORS[stage]}"><span>${stage}</span><span style="font-size:11px;color:var(--muted)">${quotes.length} · ₪${total.toLocaleString()}</span></div><div class="pipeline-col-body">${quotes.map(q=>{const c=db.clients.find(x=>x.id===q.clientId);return`<div class="pipeline-card" onclick="openQuoteModal('${q.id}')"><div class="pc-name">${esc(c?.name||'')}</div><div style="font-size:12px;color:var(--muted);margin-top:2px">${esc(q.title||'')}</div><div class="pc-val">₪${(parseFloat(q.amount)||0).toLocaleString()}</div>${q.dueDate?`<div class="pc-date">📅 ${formatDate(q.dueDate)}</div>`:''}</div>`;}).join('')}</div></div>`;
+  }).join('')}</div>`;
+}
+function openQuoteModal(id=null){
+  const q=id?db.quotes.find(x=>x.id===id):null;
+  showModal(id?'עריכת הצעה':'הצעת מחיר חדשה',`
+    <div class="form-group"><label>לקוח</label><select id="qq_client">${db.clients.map(c=>`<option value="${c.id}" ${q?.clientId===c.id?'selected':''}>${esc(c.name)}</option>`).join('')}</select></div>
+    <div class="form-group"><label>כותרת</label><input type="text" id="qq_title" value="${esc(q?.title||'')}"></div>
+    <div class="form-row">
+      <div class="form-group"><label>סכום (₪)</label><input type="number" id="qq_amount" value="${q?.amount||''}"></div>
+      <div class="form-group"><label>שלב</label><select id="qq_stage">${PIPELINE_STAGES.map(s=>`<option value="${s}" ${q?.stage===s?'selected':''}>${s}</option>`).join('')}</select></div>
+    </div>
+    <div class="form-group"><label>תאריך סגירה צפוי</label><input type="date" id="qq_due" value="${q?.dueDate||''}"></div>
+    <div class="form-group"><label>הערות</label><textarea id="qq_notes">${esc(q?.notes||'')}</textarea></div>
+    ${id?'<button class="btn btn-danger btn-sm" onclick="deleteQuote(\''+id+'\')">מחק</button>':''}
+  `,[{label:'ביטול',cls:'btn btn-ghost',fn:closeModal},{label:'שמור',cls:'btn btn-primary',fn:()=>saveQuote(id)}]);
+}
+function saveQuote(id){
+  const obj={clientId:gv('qq_client'),title:gv('qq_title'),amount:gv('qq_amount'),stage:gv('qq_stage'),dueDate:gv('qq_due'),notes:gv('qq_notes')};
+  if(id)Object.assign(db.quotes.find(x=>x.id===id),obj);else db.quotes.push({id:uid(),createdAt:nowStr(),...obj});
+  save();closeModal();renderPipeline();
+}
+function deleteQuote(id){db.quotes=db.quotes.filter(x=>x.id!==id);save();closeModal();renderPipeline()}
+
+// ══ KANBAN ══
+const KANBAN_COLS=[{key:'todo',label:'📋 לביצוע',color:'var(--muted)'},{key:'inprogress',label:'🔄 בתהליך',color:'var(--warning)'},{key:'done',label:'✅ הושלם',color:'var(--success)'}];
+function renderKanban(){
+  const td=todayStr();
+  document.getElementById('kanbanContent').innerHTML=`<div class="kanban-wrap">${KANBAN_COLS.map(col=>{
+    let tasks=db.tasks.filter(t=>t.kanbanCol===col.key||(col.key==='todo'&&!t.kanbanCol&&!t.done)||(col.key==='done'&&t.done&&!t.kanbanCol));
+    if(col.key==='done')tasks=tasks.slice(-8).reverse();
+    return`<div class="kanban-col"><div class="kanban-col-head" style="border-top:3px solid ${col.color}"><span>${col.label}</span><span style="background:var(--surface3);border-radius:10px;padding:1px 8px;font-size:11px">${tasks.length}</span></div><div class="kanban-col-body">${tasks.map(t=>{const c=db.clients.find(x=>x.id===t.clientId);const ov=!t.done&&t.dueDate&&t.dueDate<td;return`<div class="kanban-card" onclick="selectClient('${t.clientId}')"><div class="kc-title">${esc(t.title)}</div><div class="kc-client">${esc(c?.name||'')}</div>${t.dueDate?`<div class="kc-due" style="color:${ov?'var(--danger)':t.dueDate===td?'var(--warning)':'var(--muted)'}">${ov?'⚠️':''} ${formatDate(t.dueDate)}</div>`:''}</div>`;}).join('')||`<div style="padding:16px;text-align:center;color:var(--muted);font-size:12px">ריק</div>`}</div></div>`;
+  }).join('')}</div>`;
+}
+
+// ══ CALENDAR ══
+function renderCalendar(){
+  const year=calYear,month=calMonth;
+  const firstDay=new Date(year,month,1).getDay();
+  const daysInMonth=new Date(year,month+1,0).getDate();
+  const daysInPrev=new Date(year,month,0).getDate();
+  const monthNames=['ינואר','פברואר','מרץ','אפריל','מאי','יוני','יולי','אוגוסט','ספטמבר','אוקטובר','נובמבר','דצמבר'];
+  const dayNames=['א','ב','ג','ד','ה','ו','ש'];
+  const td=todayStr();
+  const tasksByDate={};
+  db.tasks.filter(t=>t.dueDate).forEach(t=>{if(!tasksByDate[t.dueDate])tasksByDate[t.dueDate]=[];tasksByDate[t.dueDate].push(t)});
+  let cells='';
+  const startDay=(firstDay+1)%7;
+  for(let i=0;i<startDay;i++){const d=daysInPrev-startDay+i+1;cells+=`<div class="cal-cell other-month"><div class="day-num">${d}</div></div>`}
+  for(let d=1;d<=daysInMonth;d++){
+    const dateStr=`${year}-${String(month+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
+    const isToday=dateStr===td;
+    const evs=tasksByDate[dateStr]||[];
+    cells+=`<div class="cal-cell ${isToday?'today':''}"><div class="day-num">${d}</div>${evs.slice(0,3).map(t=>{const ov=!t.done&&t.dueDate<td;return`<div class="cal-event ${ov?'overdue':isToday?'today-ev':''}">${esc(t.title)}</div>`}).join('')}${evs.length>3?`<div style="font-size:10px;color:var(--muted)">+${evs.length-3}</div>`:''}</div>`;
+  }
+  const totalCells=startDay+daysInMonth;const remaining=(7-(totalCells%7))%7;
+  for(let i=1;i<=remaining;i++)cells+=`<div class="cal-cell other-month"><div class="day-num">${i}</div></div>`;
+  document.getElementById('calendarContent').innerHTML=`<div class="cal-wrap">
+    <div class="cal-nav">
+      <button onclick="calMonth--;if(calMonth<0){calMonth=11;calYear--}renderCalendar()">◀</button>
+      <h3>${monthNames[month]} ${year}</h3>
+      <button onclick="calMonth++;if(calMonth>11){calMonth=0;calYear++}renderCalendar()">▶</button>
+      <button onclick="calYear=new Date().getFullYear();calMonth=new Date().getMonth();renderCalendar()">היום</button>
+    </div>
+    <div class="cal-grid">${dayNames.map(d=>`<div class="cal-day-name">${d}</div>`).join('')}${cells}</div>
+  </div>`;
+}
+
+// ══ TIMER PAGE ══
+function renderTimerPage(){
+  const logs=[...db.timeLogs].reverse().slice(0,20);
+  const totalSecs=db.timeLogs.reduce((s,l)=>s+(l.seconds||0),0);
+  const clientHours={};db.timeLogs.forEach(l=>{if(!clientHours[l.clientId])clientHours[l.clientId]=0;clientHours[l.clientId]+=(l.seconds||0)});
+  const clientOpts=db.clients.map(c=>`<option value="${c.id}" ${timerClientId===c.id?'selected':''}>${esc(c.name)}</option>`).join('');
+  document.getElementById('timerContent').innerHTML=`
+    <div class="card" style="text-align:center">
+      <div class="timer-display" id="timerDisplay">${fmtTime(timerSeconds)}</div>
+      <div class="timer-client">
+        <select id="timerClientSel" style="background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:6px 12px;color:var(--text);font-family:'Heebo',sans-serif;font-size:13px;outline:none" onchange="timerClientId=this.value">
+          <option value="">בחר לקוח...</option>${clientOpts}
+        </select>
+      </div>
+      <div style="display:flex;gap:8px;justify-content:center">
+        <button class="btn ${timerRunning?'btn-danger':'btn-success'}" onclick="toggleTimer()">${timerRunning?'⏸ עצור':'▶ התחל'}</button>
+        <button class="btn btn-ghost" onclick="resetTimer()">🔄 אפס</button>
+        <button class="btn btn-primary" onclick="saveTimeLog()" ${!timerSeconds?'disabled':''}>💾 שמור</button>
+      </div>
+      <div style="margin-top:14px;font-size:13px;color:var(--muted)">סה"כ מעקב: ${fmtTime(totalSecs)}</div>
+    </div>
+    <div class="card">
+      <div class="card-head"><h3>⏱️ פומודורו</h3></div>
+      <div class="pomo-display" id="pomoDisplay">${fmtTime(pomodoroSeconds)}</div>
+      <div class="pomo-status" id="pomoStatus">${pomodoroMode==='work'?'🎯 זמן עבודה':'☕ הפסקה'}</div>
+      <div class="pomo-btns">
+        <button class="btn ${pomodoroRunning?'btn-danger':'btn-success'}" onclick="togglePomodoro()">${pomodoroRunning?'⏸ עצור':'▶ התחל'}</button>
+        <button class="btn btn-ghost" onclick="resetPomodoro()">🔄 אפס</button>
+      </div>
+      <div class="pomo-progress"><div class="pomo-progress-fill" id="pomoFill" style="width:${(1-pomodoroSeconds/(pomodoroMode==='work'?25*60:5*60))*100}%"></div></div>
+    </div>
+    <div class="card">
+      <div class="card-head"><h3>📊 לפי לקוח</h3></div>
+      ${Object.entries(clientHours).sort((a,b)=>b[1]-a[1]).slice(0,8).map(([cid,secs])=>{const c=db.clients.find(x=>x.id===cid);return`<div class="time-log-item"><div class="tl-dur">${fmtTime(secs)}</div><div class="tl-client" onclick="selectClient('${cid}')" style="cursor:pointer">${esc(c?.name||'')}</div></div>`;}).join('')||'<div class="empty">אין נתונים</div>'}
+    </div>
+    <div class="card">
+      <div class="card-head"><h3>🕐 יומן שעות</h3></div>
+      ${logs.map(l=>{const c=db.clients.find(x=>x.id===l.clientId);return`<div class="time-log-item"><div class="tl-dur">${fmtTime(l.seconds)}</div><div class="tl-client">${esc(c?.name||'')}</div><div class="tl-date">${l.date}</div></div>`;}).join('')||'<div class="empty">אין רשומות</div>'}
+    </div>`;
+}
+function fmtTime(s){const h=Math.floor(s/3600),m=Math.floor((s%3600)/60),sc=s%60;return h?`${h}:${String(m).padStart(2,'0')}:${String(sc).padStart(2,'0')}`:`${String(m).padStart(2,'0')}:${String(sc).padStart(2,'0')}`}
+function toggleTimer(){
+  timerRunning=!timerRunning;
+  if(timerRunning){timerInterval=setInterval(()=>{timerSeconds++;const el=document.getElementById('timerDisplay');if(el)el.textContent=fmtTime(timerSeconds)},1000)}
+  else{clearInterval(timerInterval)}
+  renderTimerPage();
+}
+function resetTimer(){clearInterval(timerInterval);timerRunning=false;timerSeconds=0;renderTimerPage()}
+function saveTimeLog(){
+  if(!timerSeconds)return;
+  const cid=document.getElementById('timerClientSel')?.value||timerClientId;
+  db.timeLogs.push({id:uid(),clientId:cid,seconds:timerSeconds,date:nowStr()});
+  save();resetTimer();showToast('זמן נשמר!');renderTimerPage();
+}
+function togglePomodoro(){
+  pomodoroRunning=!pomodoroRunning;
+  if(pomodoroRunning){
+    pomodoroInterval=setInterval(()=>{
+      pomodoroSeconds--;
+      const total=pomodoroMode==='work'?25*60:5*60;
+      const pct=(1-pomodoroSeconds/total)*100;
+      const d=document.getElementById('pomoDisplay');if(d)d.textContent=fmtTime(pomodoroSeconds);
+      const f=document.getElementById('pomoFill');if(f)f.style.width=pct+'%';
+      if(pomodoroSeconds<=0){
+        clearInterval(pomodoroInterval);pomodoroRunning=false;
+        pomodoroMode=pomodoroMode==='work'?'break':'work';
+        pomodoroSeconds=pomodoroMode==='work'?25*60:5*60;
+        showToast(pomodoroMode==='break'?'☕ זמן הפסקה!':'🎯 חזור לעבודה!');
+        renderTimerPage();
+      }
+    },1000);
+  }else{clearInterval(pomodoroInterval)}
+  renderTimerPage();
+}
+function resetPomodoro(){clearInterval(pomodoroInterval);pomodoroRunning=false;pomodoroMode='work';pomodoroSeconds=25*60;renderTimerPage()}
+
+// ══ SEARCH ══
+function globalSearch(v){if(v.length>1&&v.length<3)return;if(v.length>=2){showPage('search',document.getElementById('navSearch'));document.getElementById('advSearchInput').value=v;runAdvSearch(v)}}
+function runAdvSearch(q){
+  if(!q||q.length<2){document.getElementById('searchResults').innerHTML='<div class="empty"><div class="ei">🔍</div>הזן לפחות 2 תווים</div>';return}
+  const results=[];const ql=q.toLowerCase();
+  db.clients.forEach(c=>{if(c.name.toLowerCase().includes(ql)||(c.company||'').toLowerCase().includes(ql)||(c.email||'').toLowerCase().includes(ql))results.push({type:'לקוח',icon:'👤',title:c.name,sub:c.company||c.email||'',clientId:c.id})});
+  db.tasks.forEach(t=>{if(t.title.toLowerCase().includes(ql)||(t.description||'').toLowerCase().includes(ql)){const c=db.clients.find(x=>x.id===t.clientId);results.push({type:'משימה',icon:'✅',title:t.title,sub:c?.name||'',clientId:t.clientId})}});
+  db.summaries.forEach(s=>{if((s.title||'').toLowerCase().includes(ql)||s.content.toLowerCase().includes(ql)){const c=db.clients.find(x=>x.id===s.clientId);results.push({type:'סיכום',icon:'📝',title:s.title||'ללא כותרת',sub:c?.name||'',clientId:s.clientId})}});
+  db.keywords.forEach(k=>{if(k.word.toLowerCase().includes(ql)){const c=db.clients.find(x=>x.id===k.clientId);results.push({type:'תגית',icon:'🏷️',title:k.word,sub:c?.name||'',clientId:k.clientId})}});
+  db.credentials.forEach(cr=>{if(cr.service.toLowerCase().includes(ql)||(cr.username||'').toLowerCase().includes(ql)){const c=db.clients.find(x=>x.id===cr.clientId);results.push({type:'גישה',icon:'🔑',title:cr.service,sub:c?.name||'',clientId:cr.clientId})}});
+  const hl=t=>t.replace(new RegExp(q.replace(/[.*+?^${}()|[\]\\]/g,'\\$&'),'gi'),m=>`<mark>${m}</mark>`);
+  document.getElementById('searchResults').innerHTML=results.length?`<div style="color:var(--muted);font-size:12px;margin-bottom:10px">${results.length} תוצאות</div>`+results.slice(0,30).map(r=>`<div class="search-result" onclick="selectClient('${r.clientId}')"><div class="sr-type">${r.icon} ${r.type}</div><div class="sr-title">${hl(esc(r.title))}</div>${r.sub?`<div class="sr-sub">${esc(r.sub)}</div>`:''}</div>`).join(''):'<div class="empty"><div class="ei">🤷</div>לא נמצאו תוצאות</div>';
+}
+
+// ══ CLIENTS ══
+function setSortBy(v,btn){sortByVal=v;document.querySelectorAll('.sort-btn').forEach(b=>b.classList.remove('active'));btn.classList.add('active');renderClients(document.getElementById('searchInput').value)}
+function renderClients(filter=''){
+  let clients=[...db.clients];
+  if(filter&&filter.length>0&&!filter.includes('🔍')){const f=filter.toLowerCase();clients=clients.filter(c=>c.name.toLowerCase().includes(f)||(c.company||'').toLowerCase().includes(f)||(c.email||'').toLowerCase().includes(f))}
+  const td=todayStr();
+  if(sortByVal==='name')clients.sort((a,b)=>a.name.localeCompare(b.name,'he'));
+  else if(sortByVal==='recent')clients.sort((a,b)=>(b.updatedAt||b.createdAt||'').localeCompare(a.updatedAt||a.createdAt||''));
+  else if(sortByVal==='tasks')clients.sort((a,b)=>{const ao=db.tasks.filter(t=>t.clientId===a.id&&!t.done&&t.dueDate&&t.dueDate<td).length,bo=db.tasks.filter(t=>t.clientId===b.id&&!t.done&&t.dueDate&&t.dueDate<td).length;return bo-ao});
+  const statusColors={active:'var(--success)',inactive:'var(--muted)',lead:'var(--warning)'};
+  const list=document.getElementById('clientsList');
+  if(!clients.length){list.innerHTML='<div class="empty"><div class="ei">🔍</div>לא נמצאו</div>';return}
+  list.innerHTML=clients.map(c=>{const over=db.tasks.filter(t=>t.clientId===c.id&&!t.done&&t.dueDate&&t.dueDate<td).length;const sub=[c.company,c.email,c.phone].filter(Boolean).slice(0,1).join('');const sc=statusColors[c.status||'active']||'var(--success)';return`<div class="cl-item ${c.id===currentClientId?'active':''}" onclick="selectClient('${c.id}')"><div class="cl-name"><div class="cl-dot" style="background:${sc}"></div>${esc(c.name)}${over?`<span class="cl-badge">${over}</span>`:''}</div>${sub?`<div class="cl-sub">${esc(sub)}</div>`:''}</div>`;}).join('');
+}
+function filterClients(v){renderClients(v)}
+
+function selectClient(id){
+  currentClientId=id;
+  const c=db.clients.find(x=>x.id===id);if(!c)return;
+  document.querySelectorAll('.sb-nav-btn').forEach(b=>b.classList.remove('active'));
+  document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
+  document.getElementById('pageClient').classList.add('active');
+  renderClientHeader(c);
+  document.querySelectorAll('.tab-btn').forEach((b,i)=>b.classList.toggle('active',i===0));
+  currentTab='creds';renderTab('creds');
+  renderClients(document.getElementById('searchInput').value);
+  c.updatedAt=c.updatedAt||nowStr();save();
+}
+
+function renderClientHeader(c){
+  const colors=['#6c63ff','#ff6584','#2ed573','#ffa502','#ff4757','#1e90ff'];
+  const ci=db.clients.indexOf(c)%colors.length;
+  const statusLabel={active:'פעיל',inactive:'לא פעיל',lead:'ליד'};
+  const statusBg={active:'rgba(46,213,115,.2)',inactive:'rgba(107,116,153,.2)',lead:'rgba(255,165,2,.2)'};
+  const statusColor={active:'var(--success)',inactive:'var(--muted)',lead:'var(--warning)'};
+  const st=c.status||'active';
+  const phone=c.phone?.replace(/[^0-9+]/g,'');
+  document.getElementById('cvHeader').innerHTML=`
+    <div class="cv-avatar" style="background:${colors[ci]}">${esc(c.name.charAt(0))}</div>
+    <div class="cv-info">
+      <h2>${esc(c.name)}</h2>
+      <div class="cv-status" style="background:${statusBg[st]};color:${statusColor[st]}">${statusLabel[st]||st}</div>
+      ${c.notes?`<div class="cv-sub">${esc(c.notes)}</div>`:''}
+      <div class="cv-meta">
+        ${c.email?`<a href="mailto:${esc(c.email)}" class="email-btn contact-btn">📧 ${esc(c.email)}</a>`:''}
+        ${phone?`<a href="tel:${phone}" class="call-btn contact-btn">📞 ${esc(c.phone)}</a>`:''}
+        ${phone?`<a href="https://wa.me/972${phone.replace(/^0/,'')}" target="_blank" class="wa-btn contact-btn">💬 WhatsApp</a>`:''}
+        ${c.company?`<span>🏢 ${esc(c.company)}</span>`:''}
+        ${c.birthday?`<span>🎂 ${formatDate(c.birthday)}</span>`:''}
+      </div>
+    </div>
+    <div class="cv-actions">
+      <button class="btn btn-ghost btn-sm" onclick="duplicateClient('${c.id}')">📋 שכפל</button>
+      <button class="btn btn-ghost btn-sm" onclick="openClientModal('${c.id}')">✏️ עריכה</button>
+      <button class="btn btn-danger btn-sm" onclick="deleteCurrentClient()">🗑️</button>
+    </div>`;
+}
+
+function logActivity(clientId,action,type='client'){
+  const c=db.clients.find(x=>x.id===clientId);
+  db.activity.push({clientId,clientName:c?.name||'',action,type,time:nowStr()});
+  if(db.activity.length>150)db.activity=db.activity.slice(-150);
+}
+
+function openClientModal(id=null){
+  const c=id?db.clients.find(x=>x.id===id):null;
+  showModal(id?'עריכת לקוח':'לקוח חדש',`
+    <div class="form-row"><div class="form-group"><label>שם מלא *</label><input type="text" id="fn" value="${esc(c?.name||'')}"></div><div class="form-group"><label>חברה</label><input type="text" id="fco" value="${esc(c?.company||'')}"></div></div>
+    <div class="form-row"><div class="form-group"><label>אימייל</label><input type="text" id="fe" value="${esc(c?.email||'')}"></div><div class="form-group"><label>טלפון</label><input type="text" id="fp" value="${esc(c?.phone||'')}"></div></div>
+    <div class="form-row"><div class="form-group"><label>סטטוס</label><select id="fst"><option value="active" ${(c?.status||'active')==='active'?'selected':''}>פעיל</option><option value="lead" ${c?.status==='lead'?'selected':''}>ליד</option><option value="inactive" ${c?.status==='inactive'?'selected':''}>לא פעיל</option></select></div><div class="form-group"><label>יום הולדת</label><input type="date" id="fbday" value="${c?.birthday||''}"></div></div>
+    <div class="form-group"><label>הערות</label><textarea id="fno">${esc(c?.notes||'')}</textarea></div>
+  `,[{label:'ביטול',cls:'btn btn-ghost',fn:closeModal},{label:'שמור',cls:'btn btn-primary',fn:()=>saveClient(id)}]);
+}
+function saveClient(id){
+  const name=gv('fn').trim();if(!name){alert('יש להזין שם');return}
+  if(id){const c=db.clients.find(x=>x.id===id);c.name=name;c.email=gv('fe');c.phone=gv('fp');c.company=gv('fco');c.notes=gv('fno');c.status=gv('fst');c.birthday=gv('fbday');c.updatedAt=nowStr();logActivity(id,'עודכן')}
+  else{const nid=uid();db.clients.push({id:nid,name,email:gv('fe'),phone:gv('fp'),company:gv('fco'),notes:gv('fno'),status:gv('fst'),birthday:gv('fbday'),createdAt:nowStr(),updatedAt:nowStr()});logActivity(nid,'נוסף')}
+  save();closeModal();renderClients(document.getElementById('searchInput').value);
+  if(id===currentClientId){const c=db.clients.find(x=>x.id===id);if(c)renderClientHeader(c)}
+}
+function duplicateClient(id){const c=db.clients.find(x=>x.id===id);if(!c)return;const nid=uid();db.clients.push({...c,id:nid,name:c.name+' (עותק)',createdAt:nowStr(),updatedAt:nowStr()});logActivity(nid,'שוכפל מ-'+c.name);save();renderClients();showToast('שוכפל!')}
+function deleteCurrentClient(){
+  const c=db.clients.find(x=>x.id===currentClientId);if(!c)return;
+  if(!confirm(`למחוק "${c.name}"?`))return;
+  ['credentials','keywords','files','summaries','tasks','quotes','timeLogs'].forEach(t=>{db[t]=db[t].filter(x=>x.clientId!==currentClientId)});
+  db.clients=db.clients.filter(x=>x.id!==currentClientId);
+  delete db.customFields[currentClientId];
+  save();currentClientId=null;showPage('home',document.getElementById('navHome'));renderClients();updateOverdueBadge();
+}
+
+// ══ TABS ══
+function switchTab(tab,el){document.querySelectorAll('.tab-btn').forEach(b=>b.classList.remove('active'));el.classList.add('active');currentTab=tab;renderTab(tab)}
+function renderTab(tab){
+  const a=document.getElementById('tabContent');
+  if(tab==='creds')a.innerHTML=renderCreds();
+  else if(tab==='keywords')a.innerHTML=renderKeywords();
+  else if(tab==='files')a.innerHTML=renderFiles();
+  else if(tab==='summaries')a.innerHTML=renderSummaries();
+  else if(tab==='tasks')a.innerHTML=renderTasks();
+  else if(tab==='quotes')a.innerHTML=renderClientQuotes();
+  else if(tab==='custom')a.innerHTML=renderCustomFields();
+  else if(tab==='history')a.innerHTML=renderHistory();
+}
+
+// ══ CREDS ══
+function renderCreds(){
+  const cr=db.credentials.filter(x=>x.clientId===currentClientId);
+  return`<div class="card"><div class="card-head"><h3>🔑 פרטי גישה</h3><button class="btn btn-primary btn-sm" onclick="openCredModal()">+ הוסף</button></div>${cr.length?`<table><thead><tr><th>שירות</th><th>משתמש</th><th>סיסמה</th><th>קישור</th><th>פעולות</th></tr></thead><tbody>${cr.map(c=>`<tr><td><strong>${esc(c.service)}</strong></td><td>${esc(c.username||'')}</td><td><span id="pw_${c.id}" style="font-family:monospace">••••••••</span><button class="btn btn-ghost btn-xs" style="margin-right:5px" onclick="togglePw('${c.id}','${encodeURIComponent(c.password)}')">👁️</button><button class="btn btn-ghost btn-xs" onclick="copyPw('${encodeURIComponent(c.password)}')">📋</button></td><td>${c.url?`<a href="${esc(c.url)}" target="_blank" style="color:var(--accent)">${esc(c.url.slice(0,25))}...</a>`:'-'}</td><td><button class="btn btn-ghost btn-xs" onclick="openCredModal('${c.id}')">✏️</button> <button class="btn btn-danger btn-xs" onclick="deleteCred('${c.id}')">🗑️</button></td></tr>`).join('')}</tbody></table>`:'<div class="empty"><div class="ei">🔑</div>אין פרטי גישה</div>'}</div>`;
+}
+function togglePw(id,ep){const el=document.getElementById('pw_'+id);if(el.dataset.s==='1'){el.textContent='••••••••';el.dataset.s='0';return}el.textContent=dec(decodeURIComponent(ep))||'(ריק)';el.dataset.s='1'}
+function copyPw(ep){navigator.clipboard?.writeText(dec(decodeURIComponent(ep)));showToast('הועתק!')}
+function openCredModal(id=null){
+  const c=id?db.credentials.find(x=>x.id===id):null;
+  showModal(id?'עריכת גישה':'גישה חדשה',`
+    <div class="form-row"><div class="form-group"><label>שירות *</label><input type="text" id="cs" value="${esc(c?.service||'')}"></div><div class="form-group"><label>משתמש</label><input type="text" id="cu" value="${esc(c?.username||'')}"></div></div>
+    <div class="form-group"><label>סיסמה</label><div class="pw-wrap"><input type="password" id="cp" value="${esc(c?dec(c.password):'')}"><button type="button" class="pw-eye" onclick="togglePwInput('cp')">👁️</button></div></div>
+    <div class="form-row"><div class="form-group"><label>קישור</label><input type="text" id="curl" value="${esc(c?.url||'')}"></div><div class="form-group"><label>הערות</label><input type="text" id="cn" value="${esc(c?.notes||'')}"></div></div>
+  `,[{label:'ביטול',cls:'btn btn-ghost',fn:closeModal},{label:'שמור',cls:'btn btn-primary',fn:()=>saveCred(id)}]);
+}
+function togglePwInput(id){const e=document.getElementById(id);e.type=e.type==='password'?'text':'password'}
+function saveCred(id){
+  const s=gv('cs').trim();if(!s){alert('יש להזין שירות');return}
+  const obj={clientId:currentClientId,service:s,username:gv('cu'),password:enc(gv('cp')),url:gv('curl'),notes:gv('cn')};
+  if(id)Object.assign(db.credentials.find(x=>x.id===id),obj);else db.credentials.push({id:uid(),...obj});
+  logActivity(currentClientId,'פרטי גישה עודכנו');save();closeModal();renderTab('creds');
+}
+function deleteCred(id){if(!confirm('למחוק?'))return;db.credentials=db.credentials.filter(x=>x.id!==id);save();renderTab('creds')}
+
+// ══ KEYWORDS ══
+function renderKeywords(){
+  const kws=db.keywords.filter(x=>x.clientId===currentClientId);
+  return`<div class="card"><div class="card-head"><h3>🏷️ תגיות</h3></div><div class="tags-wrap">${kws.map(k=>`<span class="tag">${esc(k.word)}<span class="x" onclick="deleteKw('${k.id}')">×</span></span>`).join('')}${!kws.length?'<span style="color:var(--muted);font-size:13px">אין תגיות</span>':''}</div><div style="display:flex;gap:8px;margin-top:12px"><input type="text" id="kwi" placeholder="הוסף תגית..." style="flex:1;background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:8px 12px;color:var(--text);font-family:'Heebo',sans-serif;font-size:13px;outline:none" onkeydown="if(event.key==='Enter')addKw()"><button class="btn btn-primary btn-sm" onclick="addKw()">+</button></div></div>`;
+}
+function addKw(){const v=document.getElementById('kwi')?.value.trim();if(!v)return;db.keywords.push({id:uid(),clientId:currentClientId,word:v});save();renderTab('keywords')}
+function deleteKw(id){db.keywords=db.keywords.filter(x=>x.id!==id);save();renderTab('keywords')}
+
+// ══ FILES ══
+function renderFiles(){
+  const files=db.files.filter(x=>x.clientId===currentClientId);
+  const icons={pdf:'📄',jpg:'🖼️',jpeg:'🖼️',png:'🖼️',gif:'🎞️',doc:'📝',docx:'📝',xls:'📊',xlsx:'📊',zip:'📦',mp4:'🎬',mp3:'🎵',ppt:'📊',pptx:'📊'};
+  return`<div class="card"><div class="card-head"><h3>📁 קבצים</h3><span style="font-size:11px;color:var(--muted)">${files.length} קבצים</span></div><div class="drop-zone" onclick="document.getElementById('fileInput').click()"><div style="font-size:28px;margin-bottom:6px">📎</div><div>לחץ להעלאת קבצים</div></div><div class="file-grid">${files.map(f=>{const ext=f.name.split('.').pop().toLowerCase();const icon=icons[ext]||'📄';const isImg=['jpg','jpeg','png','gif','webp'].includes(ext);return`<div class="file-card">${isImg&&f.data?`<img src="${f.data}" style="width:36px;height:36px;object-fit:cover;border-radius:6px">`:''}<div class="fi" ${isImg?'style="display:none"':''}>${icon}</div><div class="fn"><div class="fn-name" title="${esc(f.name)}">${esc(f.name)}</div><div class="fn-date">${f.uploadedAt}</div></div><div style="display:flex;flex-direction:column;gap:3px"><button class="btn btn-ghost btn-xs" onclick="downloadFile('${f.id}')">⬇️</button><button class="btn btn-danger btn-xs" onclick="deleteFile('${f.id}')">🗑️</button></div></div>`;}).join('')}</div>${!files.length?'<div class="empty"><div class="ei">📁</div>אין קבצים</div>':''}</div>`;
+}
+function handleFileUpload(input){
+  const files=Array.from(input.files);let done=0;
+  files.forEach(file=>{const r=new FileReader();r.onload=e=>{db.files.push({id:uid(),clientId:currentClientId,name:file.name,data:e.target.result,size:file.size,uploadedAt:nowStr()});done++;if(done===files.length){logActivity(currentClientId,`קובץ הועלה: ${files[0].name}`);save();renderTab('files')}};r.readAsDataURL(file)});input.value='';
+}
+function downloadFile(id){const f=db.files.find(x=>x.id===id);if(!f)return;const a=document.createElement('a');a.href=f.data;a.download=f.name;a.click()}
+function deleteFile(id){if(!confirm('למחוק?'))return;db.files=db.files.filter(x=>x.id!==id);save();renderTab('files')}
+
+// ══ SUMMARIES ══
+function renderSummaries(){
+  const sums=db.summaries.filter(x=>x.clientId===currentClientId).sort((a,b)=>b.createdAt.localeCompare(a.createdAt));
+  return`<div class="card"><div class="card-head"><h3>📝 סיכומים</h3><button class="btn btn-primary btn-sm" onclick="openSummaryModal()">+ חדש</button></div>${sums.map(s=>`<div class="sum-item"><div class="sh"><div><div class="st">${esc(s.title||'ללא כותרת')}</div><div class="sd">📅 ${s.createdAt}</div></div><div style="display:flex;gap:5px"><button class="btn btn-ghost btn-xs" onclick="openSummaryModal('${s.id}')">✏️</button><button class="btn btn-danger btn-xs" onclick="deleteSummary('${s.id}')">🗑️</button></div></div><div class="sb-body">${esc(s.content)}</div></div>`).join('')}${!sums.length?'<div class="empty"><div class="ei">📝</div>אין סיכומים</div>':''}</div>`;
+}
+function openSummaryModal(id=null){
+  const s=id?db.summaries.find(x=>x.id===id):null;
+  showModal(id?'עריכת סיכום':'סיכום חדש',`<div style="font-size:12px;color:var(--muted);margin-bottom:10px">📅 ${nowStr()}</div><div class="form-group"><label>כותרת</label><input type="text" id="sti" value="${esc(s?.title||'')}"></div><div class="form-group"><label>תוכן *</label><textarea id="stc" style="min-height:160px">${esc(s?.content||'')}</textarea></div>`,
+  [{label:'ביטול',cls:'btn btn-ghost',fn:closeModal},{label:'שמור',cls:'btn btn-primary',fn:()=>saveSummary(id)}]);
+}
+function saveSummary(id){
+  const c=gv('stc').trim();if(!c){alert('יש להזין תוכן');return}
+  const obj={clientId:currentClientId,title:gv('sti'),content:c,createdAt:nowStr()};
+  if(id)Object.assign(db.summaries.find(x=>x.id===id),obj);else db.summaries.push({id:uid(),...obj});
+  logActivity(currentClientId,'סיכום שיחה נוסף','summary');save();closeModal();renderTab('summaries');
+}
+function deleteSummary(id){if(!confirm('למחוק?'))return;db.summaries=db.summaries.filter(x=>x.id!==id);save();renderTab('summaries')}
+
+// ══ TASKS ══
+function renderTasks(){
+  let tasks=db.tasks.filter(x=>x.clientId===currentClientId);
+  const td=todayStr();
+  if(taskFilter==='open')tasks=tasks.filter(t=>!t.done);
+  else if(taskFilter==='done')tasks=tasks.filter(t=>t.done);
+  tasks.sort((a,b)=>{if(a.done!==b.done)return a.done?1:-1;const pa={high:0,mid:1,low:2},pb={high:0,mid:1,low:2};if((pa[a.priority]||1)!==(pb[b.priority]||1))return(pa[a.priority]||1)-(pb[b.priority]||1);return(a.dueDate||'z').localeCompare(b.dueDate||'z')});
+  const priMap={high:'גבוהה',mid:'בינונית',low:'נמוכה'};
+  return`<div class="card"><div class="card-head"><h3>✅ משימות</h3><button class="btn btn-primary btn-sm" onclick="openTaskModal()">+ חדש</button></div><div class="task-filters"><button class="tf-btn ${taskFilter==='all'?'active':''}" onclick="taskFilter='all';renderTab('tasks')">הכל</button><button class="tf-btn ${taskFilter==='open'?'active':''}" onclick="taskFilter='open';renderTab('tasks')">פתוחות</button><button class="tf-btn ${taskFilter==='done'?'active':''}" onclick="taskFilter='done';renderTab('tasks')">הושלמו</button></div>${tasks.map(t=>{const ov=!t.done&&t.dueDate&&t.dueDate<td,isT=t.dueDate===td;return`<div class="task-item ${ov?'overdue':''} ${t.done?'done':''}"><div class="task-check ${t.done?'checked':''}" onclick="toggleTask('${t.id}')"></div><div class="task-body"><div class="t-title">${t.priority?`<span class="t-pri ${t.priority}">${priMap[t.priority]}</span>`:''} ${esc(t.title)}</div>${t.description?`<div class="t-desc">${esc(t.description)}</div>`:''} ${t.dueDate?`<div class="t-due ${ov?'late':isT?'soon':'ok'}">${ov?'⚠️ ':isT?'📅 ':'📅 '}${formatDate(t.dueDate)}</div>`:''}</div><div class="task-acts"><button class="btn btn-ghost btn-xs" onclick="openTaskModal('${t.id}')">✏️</button><button class="btn btn-danger btn-xs" onclick="deleteTask('${t.id}')">🗑️</button></div></div>`;}).join('')}${!tasks.length?'<div class="empty"><div class="ei">✅</div>אין משימות</div>':''}</div>`;
+}
+function toggleTask(id){const t=db.tasks.find(x=>x.id===id);t.done=!t.done;if(t.done)logActivity(currentClientId,`משימה הושלמה: ${t.title}`,'task');save();renderTab('tasks');updateOverdueBadge()}
+function openTaskModal(id=null){
+  const t=id?db.tasks.find(x=>x.id===id):null;
+  showModal(id?'עריכת משימה':'משימה חדשה',`
+    <div class="form-group"><label>כותרת *</label><input type="text" id="tt" value="${esc(t?.title||'')}"></div>
+    <div class="form-group"><label>תיאור</label><input type="text" id="td2" value="${esc(t?.description||'')}"></div>
+    <div class="form-row"><div class="form-group"><label>תאריך יעד</label><input type="date" id="tdue" value="${t?.dueDate||''}"></div><div class="form-group"><label>עדיפות</label><select id="tpri"><option value="">ללא</option><option value="high" ${t?.priority==='high'?'selected':''}>🔴 גבוהה</option><option value="mid" ${t?.priority==='mid'?'selected':''}>🟡 בינונית</option><option value="low" ${t?.priority==='low'?'selected':''}>🟢 נמוכה</option></select></div></div>
+    ${id?`<div class="form-group"><label><input type="checkbox" id="tdone" ${t?.done?'checked':''}> הושלמה</label></div>`:''}
+  `,[{label:'ביטול',cls:'btn btn-ghost',fn:closeModal},{label:'שמור',cls:'btn btn-primary',fn:()=>saveTask(id)}]);
+}
+function saveTask(id){
+  const title=gv('tt').trim();if(!title){alert('יש להזין כותרת');return}
+  const obj={clientId:currentClientId,title,description:gv('td2'),dueDate:gv('tdue'),priority:gv('tpri')};
+  if(id){const de=document.getElementById('tdone');obj.done=de?de.checked:db.tasks.find(x=>x.id===id).done;Object.assign(db.tasks.find(x=>x.id===id),obj)}
+  else db.tasks.push({id:uid(),done:false,createdAt:nowStr(),kanbanCol:'todo',...obj});
+  logActivity(currentClientId,`משימה: ${title}`,'task');save();closeModal();renderTab('tasks');updateOverdueBadge();
+}
+function deleteTask(id){if(!confirm('למחוק?'))return;db.tasks=db.tasks.filter(x=>x.id!==id);save();renderTab('tasks');updateOverdueBadge()}
+
+// ══ CLIENT QUOTES ══
+function renderClientQuotes(){
+  const quotes=db.quotes.filter(q=>q.clientId===currentClientId);
+  const total=quotes.filter(q=>q.status==='approved').reduce((s,q)=>s+(parseFloat(q.amount)||0),0);
+  const statusMap={pending:'pending',approved:'approved',rejected:'rejected'};
+  const statusLabel={pending:'ממתין',approved:'מאושר',rejected:'נדחה'};
+  return`<div class="card"><div class="card-head"><h3>💰 הצעות מחיר</h3><div><span style="color:var(--success);font-weight:700;margin-left:12px">₪${total.toLocaleString()} מאושר</span><button class="btn btn-primary btn-sm" onclick="openClientQuoteModal()">+ חדש</button></div></div>${quotes.map(q=>`<div class="quote-item"><div class="qi-head"><div><div class="qi-title">${esc(q.title||'ללא כותרת')}</div><div style="font-size:11px;color:var(--muted);margin-top:2px">${q.createdAt||''}</div></div><div style="display:flex;align-items:center;gap:10px"><div class="qi-amount">₪${(parseFloat(q.amount)||0).toLocaleString()}</div><select class="qi-status ${statusMap[q.status||'pending']}" onchange="updateQuoteStatus('${q.id}',this.value)" style="background:none;border:none;font-family:'Heebo',sans-serif;font-size:12px;font-weight:700;cursor:pointer;outline:none"><option value="pending" ${(q.status||'pending')==='pending'?'selected':''}>ממתין</option><option value="approved" ${q.status==='approved'?'selected':''}>מאושר</option><option value="rejected" ${q.status==='rejected'?'selected':''}>נדחה</option></select><button class="btn btn-danger btn-xs" onclick="deleteQuote('${q.id}')">🗑️</button></div></div>${q.notes?`<div style="font-size:12px;color:var(--muted);margin-top:6px">${esc(q.notes)}</div>`:''}</div>`).join('')}${!quotes.length?'<div class="empty"><div class="ei">💰</div>אין הצעות מחיר</div>':''}</div>`;
+}
+function openClientQuoteModal(){
+  showModal('הצעת מחיר חדשה',`<div class="form-group"><label>כותרת</label><input type="text" id="cqt" value=""></div><div class="form-row"><div class="form-group"><label>סכום (₪)</label><input type="number" id="cqa"></div><div class="form-group"><label>שלב</label><select id="cqs">${PIPELINE_STAGES.map(s=>`<option value="${s}">${s}</option>`).join('')}</select></div></div><div class="form-group"><label>הערות</label><textarea id="cqn"></textarea></div>`,
+  [{label:'ביטול',cls:'btn btn-ghost',fn:closeModal},{label:'שמור',cls:'btn btn-primary',fn:()=>{db.quotes.push({id:uid(),clientId:currentClientId,title:gv('cqt'),amount:gv('cqa'),stage:gv('cqs'),notes:gv('cqn'),status:'pending',createdAt:nowStr()});save();closeModal();renderTab('quotes')}}]);
+}
+function updateQuoteStatus(id,status){const q=db.quotes.find(x=>x.id===id);if(q){q.status=status;save();renderTab('quotes')}}
+
+// ══ CUSTOM FIELDS ══
+function renderCustomFields(){
+  if(!db.customFields)db.customFields={};
+  const fields=db.customFields[currentClientId]||[];
+  return`<div class="card"><div class="card-head"><h3>📋 שדות מותאמים</h3><button class="btn btn-primary btn-sm" onclick="addCustomField()">+ שדה</button></div>${fields.map((f,i)=>`<div class="cf-row"><div class="cf-label">${esc(f.label)}</div><div class="cf-value" id="cfv_${i}" onclick="editCF(${i})">${esc(f.value||'לחץ לעריכה')}</div><button class="cf-edit btn-danger btn-xs btn" onclick="deleteCF(${i})">✕</button></div>`).join('')}${!fields.length?'<div class="empty"><div class="ei">📋</div>אין שדות מותאמים. לחץ "+ שדה" להוסיף.</div>':''}</div>`;
+}
+function addCustomField(){
+  showModal('שדה מותאם חדש',`<div class="form-group"><label>שם השדה</label><input type="text" id="cfl" placeholder="לדוגמה: מספר ח.פ, תחום עיסוק..."></div><div class="form-group"><label>ערך</label><input type="text" id="cfv"></div>`,
+  [{label:'ביטול',cls:'btn btn-ghost',fn:closeModal},{label:'שמור',cls:'btn btn-primary',fn:()=>{if(!db.customFields)db.customFields={};if(!db.customFields[currentClientId])db.customFields[currentClientId]=[];db.customFields[currentClientId].push({label:gv('cfl'),value:gv('cfv')});save();closeModal();renderTab('custom')}}]);
+}
+function editCF(i){
+  const f=db.customFields[currentClientId][i];
+  showModal('עריכת שדה',`<div class="form-group"><label>${esc(f.label)}</label><input type="text" id="cfev" value="${esc(f.value||'')}">`,
+  [{label:'ביטול',cls:'btn btn-ghost',fn:closeModal},{label:'שמור',cls:'btn btn-primary',fn:()=>{db.customFields[currentClientId][i].value=gv('cfev');save();closeModal();renderTab('custom')}}]);
+}
+function deleteCF(i){db.customFields[currentClientId].splice(i,1);save();renderTab('custom')}
+
+// ══ HISTORY ══
+function renderHistory(){
+  const c=db.clients.find(x=>x.id===currentClientId);
+  const logs=db.activity.filter(a=>a.clientId===currentClientId).reverse();
+  const timeSpent=db.timeLogs.filter(l=>l.clientId===currentClientId).reduce((s,l)=>s+(l.seconds||0),0);
+  return`<div class="card"><div class="card-head"><h3>🕐 היסטוריה</h3></div>${c?`<div style="display:flex;gap:16px;margin-bottom:12px;font-size:12px;color:var(--muted)"><span>📅 נוצר: ${c.createdAt||'-'}</span><span>✏️ עודכן: ${c.updatedAt||'-'}</span><span>⏱️ זמן: ${fmtTime(timeSpent)}</span></div>`:''}${logs.map(l=>`<div style="display:flex;align-items:flex-start;gap:9px;padding:7px 0;border-bottom:1px solid rgba(42,47,69,.4);font-size:12px"><div style="width:7px;height:7px;border-radius:50%;background:var(--accent);margin-top:4px;min-width:7px"></div><span style="flex:1;color:var(--muted)">${esc(l.action)}</span><span style="font-size:10px;color:var(--muted)">${l.time}</span></div>`).join('')||'<div class="empty">אין היסטוריה</div>'}</div>`;
+}
+
+// ══ REMINDERS ══
+function checkReminders(){
+  const td=todayStr();
+  const overdueTasks=db.tasks.filter(t=>!t.done&&t.dueDate&&t.dueDate<td);
+  const todayTasks=db.tasks.filter(t=>!t.done&&t.dueDate===td);
+  // Birthday check
+  const today=new Date();const tmm=String(today.getMonth()+1).padStart(2,'0'),tdd=String(today.getDate()).padStart(2,'0');
+  const birthdays=db.clients.filter(c=>c.birthday&&c.birthday.slice(5)===`${tmm}-${tdd}`);
+  if(birthdays.length){showReminderBar(`🎂 יום הולדת היום: ${birthdays.map(c=>c.name).join(', ')}`)}
+  else if(todayTasks.length){showReminderBar(`📅 יש לך ${todayTasks.length} משימות להיום`)}
+}
+function showReminderBar(msg){
+  const bar=document.createElement('div');bar.className='reminder-bar';
+  bar.innerHTML=`<span>${msg}</span><button onclick="this.parentElement.remove()">✕</button>`;
+  document.body.appendChild(bar);setTimeout(()=>bar.remove(),8000);
+}
+
+// ══ BACKUP ══
+function exportBackup(){
+  const d=JSON.stringify({...db,exportedAt:nowStr(),version:3},null,2);
+  const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([d],{type:'application/json'}));a.download=`minicrm_${new Date().toISOString().slice(0,10)}.json`;a.click();showToast('גיבוי הורד!');
+}
+function importBackup(input){
+  const file=input.files[0];if(!file)return;
+  if(!confirm('ייבוא יחליף את כל הנתונים!'))return;
+  const r=new FileReader();r.onload=e=>{try{const imp=JSON.parse(e.target.result);if(!imp.clients)throw new Error('קובץ לא תקין');db={...newDB(),...imp};save();currentClientId=null;showPage('home',document.getElementById('navHome'));renderClients();renderHome();updateOverdueBadge();showToast('יובא!')}catch(e){alert('שגיאה: '+e.message)}input.value=''};r.readAsText(file);
+}
+function exportExcel(){
+  const rows=[['שם','חברה','אימייל','טלפון','סטטוס','משימות פתוחות','נוצר']];
+  const td=todayStr();
+  db.clients.forEach(c=>{const open=db.tasks.filter(t=>t.clientId===c.id&&!t.done).length;rows.push([c.name,c.company||'',c.email||'',c.phone||'',c.status||'active',open,c.createdAt||''])});
+  let csv=rows.map(r=>r.map(v=>`"${String(v).replace(/"/g,'""')}"`).join(',')).join('\n');
+  csv='\uFEFF'+csv;
+  const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([csv],{type:'text/csv;charset=utf-8'}));a.download=`minicrm_clients_${new Date().toISOString().slice(0,10)}.csv`;a.click();showToast('CSV הורד!');
+}
+
+// ══ SETTINGS ══
+function openSettings(){
+  const al=localStorage.getItem('autolock')||'0';
+  showModal('⚙️ הגדרות',`
+    <div class="form-group"><label>שינוי סיסמה</label><input type="password" id="sp1" placeholder="סיסמה חדשה"></div>
+    <div class="form-group"><input type="password" id="sp2" placeholder="אמת סיסמה"></div>
+    <div class="divider"></div>
+    <div class="form-group"><label>נעילה אוטומטית</label><select id="sal"><option value="0" ${al==='0'?'selected':''}>ללא</option><option value="5" ${al==='5'?'selected':''}>5 דקות</option><option value="15" ${al==='15'?'selected':''}>15 דקות</option><option value="30" ${al==='30'?'selected':''}>30 דקות</option></select></div>
+    <div class="divider"></div>
+    <div style="font-size:12px;color:var(--muted)">📊 נתונים: ${db.clients.length} לקוחות · ${db.tasks.length} משימות · ${db.files.length} קבצים · ${db.quotes.length} הצעות · ${db.timeLogs.length} רשומות זמן</div>
+  `,[{label:'ביטול',cls:'btn btn-ghost',fn:closeModal},{label:'שמור',cls:'btn btn-primary',fn:saveSettings}]);
+}
+function saveSettings(){
+  const p1=gv('sp1'),p2=gv('sp2');
+  if(p1){if(p1!==p2){alert('הסיסמאות לא תואמות');return}setPass(p1)}
+  localStorage.setItem('autolock',gv('sal'));closeModal();showToast('הגדרות נשמרו!');resetAutoLock();
+}
+
+// ══ MODAL ══
+function showModal(title,body,buttons){
+  document.getElementById('modalTitle').textContent=title;
+  document.getElementById('modalBody').innerHTML=body;
+  const foot=document.getElementById('modalFoot');foot.innerHTML='';
+  buttons.forEach(b=>{const btn=document.createElement('button');btn.className=b.cls;btn.textContent=b.label;btn.onclick=b.fn;foot.appendChild(btn)});
+  document.getElementById('overlay').classList.remove('hidden');
+  setTimeout(()=>{const f=document.querySelector('#modalBody input,#modalBody textarea,#modalBody select');if(f)f.focus()},80);
+}
+function closeModal(){document.getElementById('overlay').classList.add('hidden')}
+function closeModalOutside(e){if(e.target===document.getElementById('overlay'))closeModal()}
+document.addEventListener('keydown',e=>{if(e.key==='Escape')closeModal();if((e.ctrlKey||e.metaKey)&&e.key==='k'){e.preventDefault();showPage('search',document.getElementById('navSearch'));setTimeout(()=>document.getElementById('advSearchInput')?.focus(),80)}if((e.ctrlKey||e.metaKey)&&e.key==='n'){e.preventDefault();openClientModal()}});
+
+// ══ TOAST ══
+function showToast(msg){
+  let t=document.getElementById('toast');
+  if(!t){t=document.createElement('div');t.id='toast';t.style.cssText='position:fixed;bottom:24px;left:50%;transform:translateX(-50%);background:var(--success);color:#000;padding:9px 20px;border-radius:30px;font-weight:700;font-size:13px;z-index:9000;opacity:0;transition:.3s;font-family:Heebo,sans-serif;pointer-events:none';document.body.appendChild(t)}
+  t.textContent=msg;t.style.opacity='1';clearTimeout(t._t);t._t=setTimeout(()=>t.style.opacity='0',2200);
+}
+
+// ══ UTILS ══
+function esc(s){return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;')}
+function gv(id){const e=document.getElementById(id);return e?e.value:''}
+function formatDate(d){if(!d)return'';const[y,m,dy]=d.split('-');return`${dy}/${m}/${y}`}
+</script>
+</body>
+</html>
