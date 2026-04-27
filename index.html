@@ -11,7 +11,7 @@
   --bg:#0d0f18;--surface:#141720;--surface2:#1c2030;--surface3:#242840;
   --border:#2a2f45;--accent:#6c63ff;--accent2:#ff6584;--success:#2ed573;
   --warning:#ffa502;--danger:#ff4757;--text:#e8eaf6;--muted:#6b7499;
-  --radius:14px;--nav-h:60px;--header-h:56px;
+  --radius:14px;--nav-h:70px;--header-h:56px;
 }
 .light{--bg:#f0f2f8;--surface:#fff;--surface2:#f5f6fa;--surface3:#ebedf5;--border:#dde1f0;--text:#1a1d2e;--muted:#8890b0;}
 *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
@@ -43,11 +43,10 @@ html,body{height:100%;font-family:'Heebo',sans-serif;background:var(--bg);color:
 
 /* ── MAIN CONTENT ── */
 .content{flex:1;overflow:hidden;display:flex;flex-direction:column;position:relative}
-.page{flex:1;overflow-y:auto;display:none;flex-direction:column;-webkit-overflow-scrolling:touch}
-.page.active{display:flex}
+.page{flex:1;overflow-y:auto;display:none;flex-direction:column;-webkit-overflow-scrolling:touch;padding-bottom:calc(var(--nav-h) + 20px)}.page.active{display:flex}
 
 /* ── BOTTOM NAV ── */
-.bottom-nav{height:var(--nav-h);background:var(--surface);border-top:1px solid var(--border);display:flex;align-items:center;justify-content:space-around;flex-shrink:0;padding-bottom:env(safe-area-inset-bottom)}
+.bottom-nav{height:var(--nav-h);background:var(--surface);border-top:1px solid var(--border);display:flex;align-items:center;justify-content:space-around;flex-shrink:0;padding-bottom:max(env(safe-area-inset-bottom),16px)}
 .bn-item{display:flex;flex-direction:column;align-items:center;gap:3px;padding:8px 16px;border-radius:12px;cursor:pointer;transition:.2s;position:relative;border:none;background:none;color:var(--muted);font-family:'Heebo',sans-serif;min-width:60px}
 .bn-item:active{transform:scale(.9)}
 .bn-item.active{color:var(--accent)}
@@ -313,7 +312,7 @@ input[type=text],input[type=email],input[type=password],input[type=date],input[t
       </div>
       <div class="stats-row" id="statsGrid"></div>
       <div id="homeContent"></div>
-      <div style="height:80px"></div>
+      <div style="height:20px"></div>
     </div>
 
     <!-- CLIENTS PAGE -->
@@ -322,7 +321,7 @@ input[type=text],input[type=email],input[type=password],input[type=date],input[t
         <input type="text" id="searchMobile" placeholder="🔍  חיפוש לקוח..." oninput="filterClients(this.value)">
       </div>
       <div class="client-list-wrap" id="clientListMobile"></div>
-      <div style="height:80px"></div>
+      <div style="height:20px"></div>
       <button class="add-fab" onclick="openClientModal()">+</button>
     </div>
 
